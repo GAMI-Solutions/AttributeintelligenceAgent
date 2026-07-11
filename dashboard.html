@@ -1,0 +1,389 @@
+<!-- dashboard.html - Lululemon Attribute Intelligence Dashboard -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lululemon Attribute Intelligence Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+    <!-- Background Effects -->
+    <div class="gradient-bg"></div>
+    <div class="grid-overlay"></div>
+    <div class="particle-container" id="particleContainer"></div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="ai-badge">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 2L2 7V12C2 16.5 4.5 20.74 8.5 21.85C9.5 22.15 10.5 22.3 11.5 22.38C11.67 22.39 11.83 22.4 12 22.4C12.17 22.4 12.33 22.39 12.5 22.38C13.5 22.3 14.5 22.15 15.5 21.85C19.5 20.74 22 16.5 22 12V7L12 2Z" stroke="currentColor" stroke-width="2"/>
+                            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                            <path d="M12 9V12L14 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1>Attribute Intelligence Dashboard</h1>
+                        <p class="subtitle">AI-Powered Product Attribute Analytics & Customer Insights</p>
+                    </div>
+                </div>
+                <div class="status-bar">
+                    <a href="index.html" class="btn-secondary" style="text-decoration: none;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="margin-right: 8px;">
+                            <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Back to Agent
+                    </a>
+                    <div class="status-item active">
+                        <span class="status-dot"></span>
+                        <span>Live Insights</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Key Attribute Performance KPIs -->
+        <section class="dashboard-section">
+            <div class="section-title">
+                <h2>🎯 Key Attribute Intelligence Metrics</h2>
+                <p>Real-time insights into product attribute performance and customer behavior</p>
+            </div>
+            <div class="kpi-grid">
+                <!-- Attribute Conversion Impact -->
+                <div class="kpi-card primary">
+                    <div class="kpi-header">
+                        <div>
+                            <h3 class="kpi-label">Top Attribute Impact</h3>
+                            <div class="kpi-period">Conversion Lift</div>
+                        </div>
+                        <div class="kpi-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="kpi-value" id="topAttributeImpact">+34.2%</div>
+                    <div class="kpi-change positive">
+                        <span>🏆 Nulu Fabric leading</span>
+                    </div>
+                    <div class="kpi-sparkline">
+                        <canvas id="attributeImpactSparkline"></canvas>
+                    </div>
+                </div>
+
+                <!-- Loyalty Attribute Score -->
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <div>
+                            <h3 class="kpi-label">Loyalty Attribute Score</h3>
+                            <div class="kpi-period">Repeat Purchase Driver</div>
+                        </div>
+                        <div class="kpi-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21" stroke="currentColor" stroke-width="2"/>
+                                <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+                                <path d="M23 21V19C23 17.9391 22.5786 16.9217 21.8284 16.1716C21.0783 15.4214 20.0609 15 19 15H18" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="kpi-value" id="loyaltyScore">89.4</div>
+                    <div class="kpi-change positive">
+                        <span>↗ +12.3% vs last month</span>
+                    </div>
+                    <div class="kpi-sparkline">
+                        <canvas id="loyaltySparkline"></canvas>
+                    </div>
+                </div>
+
+                <!-- Return Risk Score -->
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <div>
+                            <h3 class="kpi-label">Return Risk Score</h3>
+                            <div class="kpi-period">Attribute-Based Risk</div>
+                        </div>
+                        <div class="kpi-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 9V13L15 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="kpi-value" id="returnRisk">18.7%</div>
+                    <div class="kpi-change negative">
+                        <span>⚠️ High risk: Neon colors</span>
+                    </div>
+                    <div class="kpi-sparkline">
+                        <canvas id="returnRiskSparkline"></canvas>
+                    </div>
+                </div>
+
+                <!-- Attribute Diversity Index -->
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <div>
+                            <h3 class="kpi-label">Attribute Diversity</h3>
+                            <div class="kpi-period">Performance Spread</div>
+                        </div>
+                        <div class="kpi-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path d="M22 12H18L15 21L9 3L6 12H2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="kpi-value" id="diversityIndex">7.8</div>
+                    <div class="kpi-change positive">
+                        <span>📊 Balanced portfolio</span>
+                    </div>
+                    <div class="kpi-sparkline">
+                        <canvas id="diversitySparkline"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Attribute Performance Matrix -->
+        <section class="dashboard-section">
+            <div class="charts-row">
+                <!-- Attribute Contribution Analysis -->
+                <div class="chart-card large">
+                    <div class="chart-header">
+                        <h3>🔍 Attribute Contribution Analysis</h3>
+                        <div class="chart-controls">
+                            <button class="chart-btn active" onclick="dashboardApp.switchAttributeView('conversion', this)">Conversion</button>
+                            <button class="chart-btn" onclick="dashboardApp.switchAttributeView('loyalty', this)">Loyalty</button>
+                            <button class="chart-btn" onclick="dashboardApp.switchAttributeView('returns', this)">Returns</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="attributeContributionChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Top Influencing Attributes -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>🏆 Top Influencing Attributes</h3>
+                    </div>
+                    <div class="chart-container">
+                        <div class="attribute-ranking" id="attributeRanking">
+                            <!-- Dynamic content will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Customer Segment Analysis -->
+        <section class="dashboard-section">
+            <div class="charts-row three-col">
+                <!-- Age Group Preferences -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>👥 Age Group Preferences</h3>
+                    </div>
+                    <div class="chart-container small">
+                        <canvas id="ageGroupChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Regional Attribute Performance -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>🌍 Regional Performance</h3>
+                    </div>
+                    <div class="chart-container small">
+                        <canvas id="regionalChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Price Band Analysis -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>💰 Price Band Impact</h3>
+                    </div>
+                    <div class="chart-container small">
+                        <canvas id="priceBandChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Behavioral Attribution Engine -->
+        <section class="dashboard-section">
+            <div class="statement-row">
+                <!-- Customer Journey Attribution -->
+                <div class="statement-card">
+                    <div class="statement-header">
+                        <h3>🎯 Customer Journey Attribution</h3>
+                        <button class="btn-secondary small" onclick="dashboardApp.exportAttribution()">
+                            Export
+                        </button>
+                    </div>
+                    <div class="journey-stages">
+                        <div class="stage-item">
+                            <div class="stage-icon">👁️</div>
+                            <div class="stage-info">
+                                <span class="stage-name">Views</span>
+                                <span class="stage-attribute">Color drives 45% of initial engagement</span>
+                            </div>
+                            <div class="stage-metric">847K</div>
+                        </div>
+                        <div class="stage-item">
+                            <div class="stage-icon">🛒</div>
+                            <div class="stage-info">
+                                <span class="stage-name">Add to Cart</span>
+                                <span class="stage-attribute">Fabric quality influences 67% of decisions</span>
+                            </div>
+                            <div class="stage-metric">156K</div>
+                        </div>
+                        <div class="stage-item">
+                            <div class="stage-icon">💳</div>
+                            <div class="stage-info">
+                                <span class="stage-name">Purchase</span>
+                                <span class="stage-attribute">Fit confidence seals 78% of conversions</span>
+                            </div>
+                            <div class="stage-metric">89K</div>
+                        </div>
+                        <div class="stage-item">
+                            <div class="stage-icon">🔄</div>
+                            <div class="stage-info">
+                                <span class="stage-name">Repeat</span>
+                                <span class="stage-attribute">Sustainability drives 34% of loyalty</span>
+                            </div>
+                            <div class="stage-metric">31K</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Recommendations -->
+                <div class="statement-card">
+                    <div class="statement-header">
+                        <h3>🤖 AI-Driven Recommendations</h3>
+                        <div class="ai-confidence">
+                            <span class="confidence-badge">94.2% Confidence</span>
+                        </div>
+                    </div>
+                    <div class="recommendations-list">
+                        <div class="recommendation-item high-priority">
+                            <div class="rec-priority">🔥</div>
+                            <div class="rec-content">
+                                <h4>Increase Nulu Fabric Inventory</h4>
+                                <p>34% higher conversion rate detected. Projected $2.4M revenue impact for Q2.</p>
+                                <div class="rec-metrics">
+                                    <span class="metric-tag">+34% Conversion</span>
+                                    <span class="metric-tag">$2.4M Revenue</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="recommendation-item medium-priority">
+                            <div class="rec-priority">⚡</div>
+                            <div class="rec-content">
+                                <h4>Optimize Size Range Distribution</h4>
+                                <p>M-L sizes show 28% better performance. Adjust inventory allocation.</p>
+                                <div class="rec-metrics">
+                                    <span class="metric-tag">+28% Performance</span>
+                                    <span class="metric-tag">-15% Returns</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="recommendation-item low-priority">
+                            <div class="rec-priority">💡</div>
+                            <div class="rec-content">
+                                <h4>Regional Color Strategy</h4>
+                                <p>Earth tones perform 22% better in Tier-2 cities. Consider regional assortments.</p>
+                                <div class="rec-metrics">
+                                    <span class="metric-tag">+22% Regional</span>
+                                    <span class="metric-tag">Tier-2 Focus</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Attribute Performance Table -->
+        <section class="dashboard-section">
+            <div class="table-card">
+                <div class="table-header">
+                    <h3>📊 Detailed Attribute Performance Analysis</h3>
+                    <div class="table-controls">
+                        <select id="attributeTypeFilter" onchange="dashboardApp.filterAttributeTable()">
+                            <option value="">All Attributes</option>
+                            <option value="fabric">Fabric</option>
+                            <option value="color">Color</option>
+                            <option value="fit">Fit</option>
+                            <option value="style">Style</option>
+                        </select>
+                        <select id="metricFilter" onchange="dashboardApp.filterAttributeTable()">
+                            <option value="conversion">Conversion Impact</option>
+                            <option value="loyalty">Loyalty Score</option>
+                            <option value="returns">Return Risk</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table id="attributeTable">
+                        <thead>
+                            <tr>
+                                <th>Attribute</th>
+                                <th>Type</th>
+                                <th>Products</th>
+                                <th>Conversion Contrib.</th>
+                                <th>Loyalty Score</th>
+                                <th>Return Risk</th>
+                                <th>Revenue Impact</th>
+                                <th>Trend</th>
+                                <th>Priority</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attributeTableBody">
+                            <!-- Table rows will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Advanced Analytics Section -->
+        <section class="dashboard-section">
+            <div class="analytics-grid">
+                <!-- Attribute Correlation Heatmap -->
+                <div class="chart-card wide">
+                    <div class="chart-header">
+                        <h3>🔥 Attribute Correlation Heatmap</h3>
+                        <div class="chart-subtitle">Discover hidden relationships between product attributes</div>
+                    </div>
+                    <div class="heatmap-container">
+                        <canvas id="correlationHeatmap"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Seasonal Attribute Trends -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>📅 Seasonal Trends</h3>
+                    </div>
+                    <div class="chart-container small">
+                        <canvas id="seasonalTrends"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Include Required Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    
+    <!-- Dashboard JavaScript Modules -->
+    <script src="local-csv-loader.js"></script>
+    <script src="attribute-dashboard.js"></script>
+</body>
+</html>

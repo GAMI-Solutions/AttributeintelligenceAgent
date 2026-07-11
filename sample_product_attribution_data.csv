@@ -1,0 +1,51 @@
+product_id,product_name,category,style,fit,fabric,color,price,sustainability_score,views,cart_adds,purchases,revenue,return_rate,customer_rating,season,launch_date
+P001,Align High-Rise Pant,Womens Joggers,Athletic,High-Rise,Nulu,Black,128,85,15234,3421,2134,273152,0.12,4.8,Q1,2025-01-01
+P002,Wunder Train Tight,Womens Joggers,Athletic,High-Rise,Everlux,Navy,138,90,12456,2890,1876,258888,0.08,4.7,Q1,2025-01-05
+P003,Scuba Oversized Hoodie,Womens Tops,Casual,Oversized,Cotton-Fleece,Heather Gray,148,75,18765,4532,3210,475080,0.05,4.9,Q1,2025-01-10
+P004,ABC Jogger,Mens pants,Casual,Relaxed,Warpstreme,Khaki,138,80,9876,2103,1456,200928,0.15,4.5,Q1,2025-01-15
+P005,Define Jacket,Womens Outerwear,Athletic,Fitted,Luon,White,158,70,11234,2456,1678,265124,0.1,4.6,Q1,2025-01-20
+P006,Fast and Free Short,Womens Joggers,Athletic,High-Rise,Nulux,Pink,78,95,8765,1876,1234,96252,0.07,4.8,Q2,2025-04-01
+P007,Metal Vent Tech Shirt,Mens Tops,Athletic,Fitted,Mesh,Blue,88,60,7654,1543,987,86856,0.18,4.4,Q2,2025-04-05
+P008,Groove Pant,Womens Joggers,Casual,High-Rise,Nulu,Black,138,88,14567,3234,2345,323610,0.06,4.9,Q2,2025-04-10
+P009,City Excursion Hoodie,Mens Tops,Casual,Regular,Cotton-Modal,Gray,168,72,6789,1234,876,147168,0.2,4.3,Q2,2025-04-15
+P010,Swiftly Tech Racerback,Womens Tops,Athletic,Fitted,Silverescent,Red,68,85,16789,3890,2876,195568,0.04,4.8,Q2,2025-04-20
+P011,Product 11,Womens Joggers,Lifestyle,Fitted,Cotton-Blend,Purple,162,82,16820,2158,1808,139752,0.13,3.7,Q1,2025-04-01
+P012,Product 12,Womens Outerwear,Business Casual,Fitted,Warpstreme,White,150,77,19753,2918,2659,225264,0.02,4.4,Q1,2025-06-15
+P013,Product 13,Womens Joggers,Athletic,Mid-Rise,Warpstreme,Green,155,87,13480,3966,1818,246329,0.2,4.5,Q1,2025-06-28
+P014,Product 14,Womens Tops,Casual,Relaxed,Merino Wool,Navy,92,66,9788,2492,2331,231773,0.21,3.6,Q1,2025-05-12
+P015,Product 15,Womens Tops,Athletic,High-Rise,Nulux,Green,118,85,9201,1670,2057,171577,0.21,4,Q2,2025-04-04
+P016,Product 16,Mens Tops,Business Casual,Regular,Nulux,Purple,140,85,5611,3405,953,250091,0.02,3.8,Q2,2025-06-04
+P017,Product 17,Womens Joggers,Athletic,Relaxed,Warpstreme,Green,123,67,16244,3144,1712,316298,0.04,3.8,Q2,2025-05-08
+P018,Product 18,Mens Tops,Lifestyle,Mid-Rise,Merino Wool,Black,104,91,10035,1092,1831,174261,0.18,3.7,Q1,2025-04-14
+P019,Product 19,Womens Joggers,Casual,Oversized,Luon,Red,91,61,14130,1077,1201,206482,0.14,4.7,Q2,2025-06-19
+P020,Product 20,Mens Tops,Performance,Regular,Nulu,Red,113,94,13637,3443,1702,328781,0.16,4.9,Q1,2025-06-17
+P021,Product 21,Womens Joggers,Casual,High-Rise,Luon,Blue,127,94,9914,2514,2587,76323,0.11,4.9,Q1,2025-06-20
+P022,Product 22,Womens Outerwear,Performance,Regular,Cotton-Blend,Navy,68,69,15306,1593,808,64285,0.1,3.8,Q1,2025-03-24
+P023,Product 23,Womens Outerwear,Athletic,Oversized,Warpstreme,Green,92,87,19758,3902,1513,245688,0.16,3.6,Q2,2025-04-20
+P024,Product 24,Womens Tops,Athletic,Oversized,Luon,Blue,86,89,16405,2889,2434,346087,0.05,4.3,Q1,2025-02-09
+P025,Product 25,Mens pants,Business Casual,Mid-Rise,Nulu,Blue,164,75,16208,1603,1496,69187,0.02,3.8,Q2,2025-05-10
+P026,Product 26,Womens Outerwear,Casual,Regular,Warpstreme,Red,144,63,14678,2622,1828,237311,0.03,3.6,Q2,2025-06-20
+P027,Product 27,Womens Tops,Lifestyle,High-Rise,Warpstreme,Blue,162,80,7818,3833,1582,289364,0.01,3.8,Q2,2025-02-13
+P028,Product 28,Womens Joggers,Casual,Relaxed,Nulu,Green,77,70,9236,3732,2128,59971,0.12,4.6,Q1,2025-05-26
+P029,Product 29,Womens Tops,Athletic,High-Rise,Everlux,Purple,86,66,6785,3909,2360,236992,0.17,4.4,Q2,2025-02-22
+P030,Product 30,Womens Joggers,Athletic,Fitted,Merino Wool,Green,94,88,6870,1513,1769,161030,0.14,4.1,Q1,2025-01-02
+P031,Product 31,Womens Joggers,Casual,Fitted,Merino Wool,Pink,116,65,17381,2794,1326,279602,0.21,4.6,Q2,2025-04-06
+P032,Product 32,Mens Tops,Business Casual,Fitted,Luon,Pink,123,90,7716,2211,1664,103170,0.05,4.1,Q1,2025-04-22
+P033,Product 33,Womens Joggers,Performance,Relaxed,Everlux,Blue,145,69,13998,2085,2417,71806,0.14,4.2,Q1,2025-06-11
+P034,Product 34,Mens Tops,Lifestyle,Mid-Rise,Everlux,White,105,97,16839,2505,1225,97794,0.14,3.9,Q2,2025-06-10
+P035,Product 35,Womens Outerwear,Casual,Fitted,Warpstreme,Purple,117,71,16264,3122,1371,106363,0.04,3.8,Q2,2025-03-19
+P036,Product 36,Mens pants,Athletic,High-Rise,Nulux,Pink,145,83,9647,1771,2646,62925,0.24,3.7,Q1,2025-02-14
+P037,Product 37,Womens Joggers,Business Casual,Fitted,Everlux,Black,118,68,9370,1734,1050,140182,0.03,4.3,Q2,2025-05-19
+P038,Product 38,Womens Outerwear,Lifestyle,Relaxed,Merino Wool,Blue,86,88,16342,3777,2185,74934,0.04,3.5,Q1,2025-03-06
+P039,Product 39,Mens pants,Performance,Oversized,Nulux,Navy,73,95,10345,3139,1157,160251,0.06,4.4,Q2,2025-06-18
+P040,Product 40,Mens pants,Lifestyle,Fitted,Warpstreme,Blue,77,89,17897,2314,629,55959,0.22,4.4,Q2,2025-02-24
+P041,Product 41,Mens pants,Performance,Oversized,Warpstreme,Black,113,94,8482,1910,2144,138803,0.1,4.3,Q2,2025-01-27
+P042,Product 42,Mens Tops,Business Casual,Mid-Rise,Merino Wool,Green,77,93,11164,2449,1045,191204,0.06,5,Q2,2025-01-05
+P043,Product 43,Womens Tops,Athletic,Oversized,Merino Wool,Green,88,78,17264,3673,1399,128105,0.21,4.7,Q2,2025-04-02
+P044,Product 44,Mens Tops,Lifestyle,Relaxed,Luon,Black,146,71,18161,3544,2487,79084,0.14,3.8,Q1,2025-02-23
+P045,Product 45,Mens pants,Casual,Fitted,Luon,Navy,69,69,8013,3846,2496,268473,0.23,4.3,Q1,2025-02-14
+P046,Product 46,Womens Outerwear,Performance,Relaxed,Warpstreme,Gray,104,92,13638,2151,2762,202083,0.05,4.7,Q2,2025-04-09
+P047,Product 47,Womens Outerwear,Lifestyle,Relaxed,Warpstreme,Green,160,74,16131,2812,2505,51734,0.11,3.6,Q2,2025-06-18
+P048,Product 48,Mens pants,Performance,Mid-Rise,Luon,Black,119,99,14427,1264,2849,159855,0.03,4,Q1,2025-01-15
+P049,Product 49,Womens Outerwear,Casual,High-Rise,Cotton-Blend,Red,95,84,18696,1033,2571,83643,0.19,3.6,Q1,2025-06-21
+P050,Product 50,Mens Tops,Athletic,High-Rise,Nulu,White,130,98,13726,2543,1244,332187,0.13,4.4,Q1,2025-01-07
