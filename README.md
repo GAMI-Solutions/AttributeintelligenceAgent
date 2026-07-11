@@ -1,7 +1,7 @@
 # Attribute Intelligence Agent
 
 A client-side web application that demonstrates an **AI-powered product attribute analytics experience** for a retail catalog (styled around Lululemon product data). It ingests product-level CSV data — attributes such as fabric, fit, style, color, and price alongside funnel metrics such as views, cart adds, purchases, revenue, and returns — aggregates performance by attribute, and presents the results through two interactive pages:
-
+Quick demo link https://legendary-pixie-228606.netlify.app/
 | Page | Purpose |
 |------|---------|
 | [index.html](index.html) | **Agent console** — upload a CSV (or load generated sample data), pick an analysis type (Inventory, Pricing, Customer, Recommendations), run the animated "Agentic AI" pipeline, and review metrics, charts, insights, and recommendations. Includes a simulated multi-agent command center (Scout / Analyst / Strategy / Action agents) with a live communication log. |
