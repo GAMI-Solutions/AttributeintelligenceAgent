@@ -1,0 +1,444 @@
+<!-- index.html - Lululemon Attribute Intelligence Agent -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lululemon Attribute Intelligence Agent</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="agentic-ai.css">
+</head>
+<body>
+    <!-- Background Effects -->
+    <div class="gradient-bg"></div>
+    <div class="grid-overlay"></div>
+    <div class="particle-container" id="particleContainer"></div>
+    
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner">
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
+            <div class="spinner-core"></div>
+        </div>
+        <div class="loading-text">Initializing AI Agent...</div>
+        <div class="loading-progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+    </div>
+
+    <!-- Processing Overlay -->
+    <div class="processing-overlay" id="processingOverlay">
+        <div class="process-container">
+            <div class="ai-brain">
+                <svg width="120" height="120" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="url(#gradient1)"/>
+                    <defs>
+                        <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#146eb4;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#4daae8;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <h3 class="process-title">AI Processing Data</h3>
+            <div class="process-status" id="processStatus">Initializing neural networks...</div>
+            <div class="process-stages">
+                <div class="process-stage" data-stage="1">
+                    <div class="stage-dot"></div>
+                    <span>Data Validation</span>
+                </div>
+                <div class="process-stage" data-stage="2">
+                    <div class="stage-dot"></div>
+                    <span>Feature Extraction</span>
+                </div>
+                <div class="process-stage" data-stage="3">
+                    <div class="stage-dot"></div>
+                    <span>ML Analysis</span>
+                </div>
+                <div class="process-stage" data-stage="4">
+                    <div class="stage-dot"></div>
+                    <span>Generating Insights</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="ai-badge">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 2L2 7V12C2 16.5 4.5 20.74 8.5 21.85C9.5 22.15 10.5 22.3 11.5 22.38C11.67 22.39 11.83 22.4 12 22.4C12.17 22.4 12.33 22.39 12.5 22.38C13.5 22.3 14.5 22.15 15.5 21.85C19.5 20.74 22 16.5 22 12V7L12 2Z" stroke="currentColor" stroke-width="2"/>
+                            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                            <path d="M12 9V12L14 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1>Lululemon Attribute Intelligence Agent</h1>
+                        <p class="subtitle">AI-Powered Product Analytics & Decision Engine</p>
+                    </div>
+                </div>
+                <div class="status-bar">
+                    <button class="btn-dashboard" onclick="window.location.href='dashboard.html'" style="margin-left: 20px; padding: 10px 20px; background: linear-gradient(135deg, #146eb4, #4daae8); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; transition: all 0.3s ease;">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="display: inline-block; vertical-align: middle; margin-right: 5px;">
+        <rect x="3" y="3" width="8" height="8" stroke="currentColor" stroke-width="2"/>
+        <rect x="13" y="3" width="8" height="8" stroke="currentColor" stroke-width="2"/>
+        <rect x="3" y="13" width="8" height="8" stroke="currentColor" stroke-width="2"/>
+        <rect x="13" y="13" width="8" height="8" stroke="currentColor" stroke-width="2"/>
+    </svg>
+    Strategic Dashboard
+</button>
+                    <div class="status-item active">
+                        <span class="status-dot"></span>
+                        <span>AI Active</span>
+                    </div>
+                    <div class="status-item">
+                        <span id="dataPointsCount">0</span>
+                        <span>Products</span>
+                    </div>
+                    <div class="status-item">
+                        <span id="accuracyRate">0%</span>
+                        <span>Accuracy</span>
+                    </div>
+                    <div class="status-item">
+                        <span id="processingTime">0s</span>
+                        <span>Process Time</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Data Upload Section -->
+        <section class="data-section">
+            <div class="section-header">
+                <svg class="section-icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" stroke-width="2"/>
+                    <path d="M14 2V8H20" stroke="currentColor" stroke-width="2"/>
+                    <path d="M12 11V17M9 14H15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <h2>Data Source Configuration</h2>
+            </div>
+            
+            <div class="upload-area" id="uploadArea">
+                <svg class="upload-icon" width="64" height="64" viewBox="0 0 24 24" fill="none">
+                    <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M17 8L12 3L7 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 3V15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <h3>Upload Product Data CSV</h3>
+                <p>Drag & drop your product data or click to browse</p>
+                <input type="file" id="fileInput" accept=".csv" hidden>
+                <button class="btn-secondary" onclick="document.getElementById('fileInput').click()">
+                    Select CSV File
+                </button>
+                <button class="btn-primary" onclick="dataLoader.loadSampleData()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="margin-right: 8px;">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2"/>
+                        <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2"/>
+                        <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    Load Sample Lululemon Data
+                </button>
+            </div>
+
+            <!-- File Info Display -->
+            <div class="file-info" id="fileInfo" style="display: none;">
+                <div class="file-details">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" stroke-width="2"/>
+                        <path d="M14 2V8H20" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    <div>
+                        <span class="file-name" id="fileName">No file selected</span>
+                        <span class="file-size" id="fileSize">0 KB</span>
+                    </div>
+                </div>
+                <button class="btn-remove" onclick="dataLoader.clearData()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="data-preview" id="dataPreview" style="display: none;">
+                <h3>Data Loaded Successfully</h3>
+                <div class="data-stats">
+                    <div class="stat-card">
+                        <span class="stat-value" id="totalProducts">0</span>
+                        <span class="stat-label">Products</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value" id="totalCategories">0</span>
+                        <span class="stat-label">Categories</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value" id="avgRating">0</span>
+                        <span class="stat-label">Avg Rating</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value" id="totalRevenue">$0</span>
+                        <span class="stat-label">Total Revenue</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- AI Workflow Pipeline -->
+        <section class="workflow-section">
+            <div class="section-header">
+                <svg class="section-icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                </svg>
+                <h2>Agentic AI Workflow Pipeline</h2>
+            </div>
+            
+            <div class="pipeline-container">
+                <div class="pipeline-track"></div>
+                <div class="pipeline-stages">
+                    <div class="pipeline-stage" id="stage-ingest">
+                        <div class="stage-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
+                                <path d="M3 9H21M9 21V9" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                        </div>
+                        <div class="stage-label">Data Ingestion</div>
+                        <div class="stage-status">Ready</div>
+                    </div>
+                    
+                    <div class="pipeline-stage" id="stage-process">
+                        <div class="stage-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 2V6M12 18V22M4.93 4.93L7.76 7.76M16.24 16.24L19.07 19.07M2 12H6M18 12H22M4.93 19.07L7.76 16.24M16.24 7.76L19.07 4.93" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <div class="stage-label">Processing</div>
+                        <div class="stage-status">Waiting</div>
+                    </div>
+                    
+                    <div class="pipeline-stage" id="stage-analyze">
+                        <div class="stage-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                                <path d="M12 6V12L16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <div class="stage-label">ML Analysis</div>
+                        <div class="stage-status">Waiting</div>
+                    </div>
+                    
+                    <div class="pipeline-stage" id="stage-insights">
+                        <div class="stage-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                                <path d="M12 16V12M12 8H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <div class="stage-label">Insights</div>
+                        <div class="stage-status">Waiting</div>
+                    </div>
+                    
+                    <div class="pipeline-stage" id="stage-recommend">
+                        <div class="stage-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path d="M9 11L12 14L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M21 12V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H16" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                        </div>
+                        <div class="stage-label">Recommendations</div>
+                        <div class="stage-status">Waiting</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Control Panel -->
+        <section class="control-panel">
+            <div class="analysis-options">
+                <div class="option-card" onclick="analysisEngine.selectAnalysis('inventory')">
+                    <svg class="option-icon" width="32" height="32" viewBox="0 0 24 24" fill="none">
+                        <path d="M20 7H4C2.89543 7 2 7.89543 2 9V19C2 20.1046 2.89543 21 4 21H20C21.1046 21 22 20.1046 22 19V9C22 7.89543 21.1046 7 20 7Z" stroke="currentColor" stroke-width="2"/>
+                        <path d="M16 7V5C16 3.89543 15.1046 3 14 3H10C8.89543 3 8 3.89543 8 5V7" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    <h3>Inventory Optimization</h3>
+                    <p>Predict demand and optimize stock levels</p>
+                </div>
+                
+                <div class="option-card" onclick="analysisEngine.selectAnalysis('pricing')">
+                    <svg class="option-icon" width="32" height="32" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2V22M17 5H9.5C8.57174 5 7.6815 5.36875 7.02513 6.02513C6.36875 6.6815 6 7.57174 6 8.5C6 9.42826 6.36875 10.3185 7.02513 10.9749C7.6815 11.6313 8.57174 12 9.5 12H14.5C15.4283 12 16.3185 12.3687 16.9749 13.0251C17.6313 13.6815 18 14.5717 18 15.5C18 16.4283 17.6313 17.3185 16.9749 17.9749C16.3185 18.6313 15.4283 19 14.5 19H6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <h3>Dynamic Pricing</h3>
+                    <p>AI-driven price optimization</p>
+                </div>
+                
+                <div class="option-card" onclick="analysisEngine.selectAnalysis('customer')">
+                    <svg class="option-icon" width="32" height="32" viewBox="0 0 24 24" fill="none">
+                        <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M23 21V19C23 17.9391 22.5786 16.9217 21.8284 16.1716C21.0783 15.4214 20.0609 15 19 15H18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <h3>Customer Insights</h3>
+                    <p>Behavioral analysis & segmentation</p>
+                </div>
+                
+                <div class="option-card" onclick="analysisEngine.selectAnalysis('recommendations')">
+                    <svg class="option-icon" width="32" height="32" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                    </svg>
+                    <h3>Product Recommendations</h3>
+                    <p>Personalized product suggestions</p>
+                </div>
+            </div>
+
+            <button class="btn-execute" onclick="analysisEngine.executeAnalysis()" id="executeBtn" disabled>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                    <path d="M10 8L14 12L10 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Execute AI Analysis
+            </button>
+        </section>
+
+        <!-- Results Section -->
+        <section class="results-section" id="resultsSection" style="display: none;">
+            <div class="section-header">
+                <svg class="section-icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M3 3H21V21H3V3Z" stroke="currentColor" stroke-width="2"/>
+                    <path d="M3 12H21M12 3V21M7.5 6V9M16.5 15V18" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                <h2>AI Analysis Results</h2>
+            </div>
+
+            <!-- Key Metrics Dashboard -->
+            <div class="metrics-dashboard">
+                <div class="metric-card primary">
+                    <div class="metric-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 2L2 7V12C2 16.5 5.23 20.68 10 21.93C10.65 22.09 11.32 22.18 12 22.18C12.68 22.18 13.35 22.09 14 21.93C18.77 20.68 22 16.5 22 12V7L12 2Z" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-value" id="topAttribute">-</div>
+                        <div class="metric-label">Top Performing Attribute</div>
+                        <div class="metric-change positive">+0%</div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                            <path d="M22 12H18L15 21L9 3L6 12H2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-value" id="conversionRate">0%</div>
+                        <div class="metric-label">Predicted Conversion</div>
+                        <div class="metric-change positive">+0%</div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                            <rect x="2" y="7" width="20" height="15" rx="2" stroke="currentColor" stroke-width="2"/>
+                            <path d="M16 2L12 7L8 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-value" id="revenueImpact">$0</div>
+                        <div class="metric-label">Revenue Opportunity</div>
+                        <div class="metric-change positive">+0%</div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                            <circle cx="9" cy="21" r="1" stroke="currentColor" stroke-width="2"/>
+                            <circle cx="20" cy="21" r="1" stroke="currentColor" stroke-width="2"/>
+                            <path d="M1 1H5L7.68 14.39C7.77144 14.8504 8.02191 15.264 8.38755 15.5583C8.75318 15.8526 9.2107 16.009 9.68 16H19.4C19.8693 16.009 20.3268 15.8526 20.6925 15.5583C21.0581 15.264 21.3086 14.8504 21.4 14.39L23 6H6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-value" id="inventoryOptimization">0</div>
+                        <div class="metric-label">Inventory Score</div>
+                        <div class="metric-change positive">Optimized</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Analysis -->
+            <div class="analysis-results">
+                <div class="result-card">
+                    <h3>Product Attribute Performance</h3>
+                    <div class="attribute-chart" id="attributeChart">
+                        <canvas id="attrCanvas"></canvas>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <h3>AI Recommendations</h3>
+                    <div class="recommendations-list" id="recommendationsList">
+                        <!-- Dynamic recommendations -->
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <h3>Predictive Insights</h3>
+                    <div class="insights-grid" id="insightsGrid">
+                        <!-- Dynamic insights -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-panel">
+                <button class="btn-primary" onclick="resultsExporter.implementRecommendations()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M9 11L12 14L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M21 12V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H16" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    Implement Recommendations
+                </button>
+                <button class="btn-secondary" onclick="resultsExporter.exportResults()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M21 15V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V15" stroke="currentColor" stroke-width="2"/>
+                        <path d="M7 10L12 15L17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M12 15V3" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    Export Report
+                </button>
+                <button class="btn-secondary" onclick="resultsExporter.downloadCSV()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="currentColor" stroke-width="2"/>
+                        <path d="M14 2V8H20" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 12H14M10 16H14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    Download Sample CSV
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="notification" id="notification">
+        <div class="notification-content">
+            <span id="notificationText"></span>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="data-loader.js"></script>
+    <script src="analysis-engine.js"></script>
+    <script src="ui-controller.js"></script>
+    <script src="results-exporter.js"></script>
+    <script src="agentic-ai.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
