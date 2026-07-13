@@ -24,7 +24,7 @@ Any change to this policy will be committed to this repository and reflected in 
 
 ## Contact
 
-Open an issue at https://github.com/GAMI-Solutions/attributeintelligenceagent/issues
+Open an issue at https://github.com/GAMI-Solutions/AttributeintelligenceAgent/issues
 
 ---
 

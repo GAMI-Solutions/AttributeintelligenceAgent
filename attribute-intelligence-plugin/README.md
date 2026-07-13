@@ -18,12 +18,14 @@ Upload a product/SKU catalog CSV and ask Claude to analyze it. You get:
 
 ## Install
 
-From Claude Code:
+This plugin lives inside the `AttributeintelligenceAgent` repo (in the `attribute-intelligence-plugin/` subdirectory) alongside the web app. From Claude Code:
 
 ```
-/plugin marketplace add GAMI-Solutions/attributeintelligenceagent
+/plugin marketplace add GAMI-Solutions/AttributeintelligenceAgent
 /plugin install attributeintelligenceagent@attributeintelligenceagent-marketplace
 ```
+
+The marketplace manifest lives at the repo root (`.claude-plugin/marketplace.json`) and points at this subdirectory, so the install command targets the whole repo, not this folder directly.
 
 ## Use
 
@@ -52,19 +54,24 @@ Any other tabular file with recognizable attribute + funnel columns will be anal
 
 ## What's inside
 
+This directory sits inside the `AttributeintelligenceAgent` repo, next to the web app:
+
 ```
-attributeintelligenceagent/
+AttributeintelligenceAgent/
 ├── .claude-plugin/
-│   ├── plugin.json                      # plugin manifest
-│   └── marketplace.json                 # makes this repo directly installable as a marketplace
-├── skills/
-│   └── attribute-intelligence/
-│       └── SKILL.md                     # the methodology (the "brain")
-├── agents/
-│   └── attributeintelligenceagent.md    # deep-analysis subagent
-├── README.md
-├── PRIVACY.md
-└── LICENSE
+│   └── marketplace.json                 # repo-root marketplace manifest, sources this subdirectory
+├── attribute-intelligence-plugin/        # <- you are here
+│   ├── .claude-plugin/
+│   │   └── plugin.json                  # plugin manifest
+│   ├── skills/
+│   │   └── attribute-intelligence/
+│   │       └── SKILL.md                 # the methodology (the "brain")
+│   ├── agents/
+│   │   └── attributeintelligenceagent.md # deep-analysis subagent
+│   ├── README.md
+│   ├── PRIVACY.md
+│   └── LICENSE
+└── (the web app: index.html, dashboard.html, netlify/, etc.)
 ```
 
 ## Methodology (short version)

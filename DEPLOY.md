@@ -1,6 +1,6 @@
 # Deploy Guide
 
-Two independent deliverables live in this repository: the **web app** (static site + one Netlify Function) and the **Claude plugin** (`attribute-intelligence-plugin/`). They deploy separately.
+This single repository holds both the **web app** (static site + one Netlify Function, at the repo root) and the **Claude plugin** (`attribute-intelligence-plugin/`, a subdirectory). They deploy independently of each other, but live in one place since `GAMI-Solutions/AttributeintelligenceAgent` already exists and GitHub repo names are case-insensitive — a second repo named `attributeintelligenceagent` would have collided with it. The repo root has its own `.claude-plugin/marketplace.json` that sources the plugin from `./attribute-intelligence-plugin`.
 
 ## 1. Web app — Netlify environment variable
 
@@ -34,16 +34,16 @@ Do not open `index.html` directly via `file://` — the function call and the da
 
 ## 3. Claude plugin — install steps
 
-The plugin in `attribute-intelligence-plugin/` is independent of the web app; it runs entirely inside a Claude conversation and needs no deployment or API key of its own.
+The plugin lives in `attribute-intelligence-plugin/` within this same repo; it runs entirely inside a Claude conversation and needs no deployment or API key of its own.
 
-From Claude Code, once the plugin is published to `GAMI-Solutions/attributeintelligenceagent` (or pointed at a local path during development):
+From Claude Code, once this repo is pushed to GitHub:
 
 ```
-/plugin marketplace add GAMI-Solutions/attributeintelligenceagent
+/plugin marketplace add GAMI-Solutions/AttributeintelligenceAgent
 /plugin install attributeintelligenceagent@attributeintelligenceagent-marketplace
 ```
 
-To develop it locally before publishing, point the marketplace command at the local plugin directory instead of the GitHub path.
+The `marketplace add` command targets the whole repo (its root `.claude-plugin/marketplace.json` points at the `attribute-intelligence-plugin/` subdirectory) — don't point it at the subdirectory itself. To develop it locally before publishing, point the marketplace command at this repo's local path instead of the GitHub path.
 
 ## Known scope note
 
