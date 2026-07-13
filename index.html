@@ -42,8 +42,8 @@
                     </defs>
                 </svg>
             </div>
-            <h3 class="process-title">AI Processing Data</h3>
-            <div class="process-status" id="processStatus">Initializing neural networks...</div>
+            <h3 class="process-title">Analyzing Catalog Data</h3>
+            <div class="process-status" id="processStatus">Aggregating catalog data...</div>
             <div class="process-stages">
                 <div class="process-stage" data-stage="1">
                     <div class="stage-dot"></div>
@@ -51,15 +51,15 @@
                 </div>
                 <div class="process-stage" data-stage="2">
                     <div class="stage-dot"></div>
-                    <span>Feature Extraction</span>
+                    <span>Attribute Aggregation</span>
                 </div>
                 <div class="process-stage" data-stage="3">
                     <div class="stage-dot"></div>
-                    <span>ML Analysis</span>
+                    <span>Claude Reasoning</span>
                 </div>
                 <div class="process-stage" data-stage="4">
                     <div class="stage-dot"></div>
-                    <span>Generating Insights</span>
+                    <span>Rendering Results</span>
                 </div>
             </div>
         </div>
@@ -80,7 +80,7 @@
                     </div>
                     <div>
                         <h1>Lululemon Attribute Intelligence Agent</h1>
-                        <p class="subtitle">AI-Powered Product Analytics & Decision Engine</p>
+                        <p class="subtitle">Real Attribute Aggregation + Claude-Powered Analysis</p>
                     </div>
                 </div>
                 <div class="status-bar">
@@ -103,7 +103,7 @@
                     </div>
                     <div class="status-item">
                         <span id="accuracyRate">0%</span>
-                        <span>Accuracy</span>
+                        <span>Data Completeness</span>
                     </div>
                     <div class="status-item">
                         <span id="processingTime">0s</span>
@@ -228,7 +228,7 @@
                                 <path d="M12 6V12L16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                             </svg>
                         </div>
-                        <div class="stage-label">ML Analysis</div>
+                        <div class="stage-label">Claude Reasoning</div>
                         <div class="stage-status">Waiting</div>
                     </div>
                     
@@ -260,7 +260,7 @@
         <!-- Control Panel -->
         <section class="control-panel">
             <div class="analysis-options">
-                <div class="option-card" onclick="analysisEngine.selectAnalysis('inventory')">
+                <div class="option-card" onclick="analysisEngine.selectAnalysis(event, 'inventory')">
                     <svg class="option-icon" width="32" height="32" viewBox="0 0 24 24" fill="none">
                         <path d="M20 7H4C2.89543 7 2 7.89543 2 9V19C2 20.1046 2.89543 21 4 21H20C21.1046 21 22 20.1046 22 19V9C22 7.89543 21.1046 7 20 7Z" stroke="currentColor" stroke-width="2"/>
                         <path d="M16 7V5C16 3.89543 15.1046 3 14 3H10C8.89543 3 8 3.89543 8 5V7" stroke="currentColor" stroke-width="2"/>
@@ -269,7 +269,7 @@
                     <p>Predict demand and optimize stock levels</p>
                 </div>
                 
-                <div class="option-card" onclick="analysisEngine.selectAnalysis('pricing')">
+                <div class="option-card" onclick="analysisEngine.selectAnalysis(event, 'pricing')">
                     <svg class="option-icon" width="32" height="32" viewBox="0 0 24 24" fill="none">
                         <path d="M12 2V22M17 5H9.5C8.57174 5 7.6815 5.36875 7.02513 6.02513C6.36875 6.6815 6 7.57174 6 8.5C6 9.42826 6.36875 10.3185 7.02513 10.9749C7.6815 11.6313 8.57174 12 9.5 12H14.5C15.4283 12 16.3185 12.3687 16.9749 13.0251C17.6313 13.6815 18 14.5717 18 15.5C18 16.4283 17.6313 17.3185 16.9749 17.9749C16.3185 18.6313 15.4283 19 14.5 19H6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                     </svg>
@@ -277,7 +277,7 @@
                     <p>AI-driven price optimization</p>
                 </div>
                 
-                <div class="option-card" onclick="analysisEngine.selectAnalysis('customer')">
+                <div class="option-card" onclick="analysisEngine.selectAnalysis(event, 'customer')">
                     <svg class="option-icon" width="32" height="32" viewBox="0 0 24 24" fill="none">
                         <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                         <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
@@ -287,7 +287,7 @@
                     <p>Behavioral analysis & segmentation</p>
                 </div>
                 
-                <div class="option-card" onclick="analysisEngine.selectAnalysis('recommendations')">
+                <div class="option-card" onclick="analysisEngine.selectAnalysis(event, 'recommendations')">
                     <svg class="option-icon" width="32" height="32" viewBox="0 0 24 24" fill="none">
                         <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
                     </svg>
@@ -366,12 +366,14 @@
                         </svg>
                     </div>
                     <div class="metric-content">
-                        <div class="metric-value" id="inventoryOptimization">0</div>
-                        <div class="metric-label">Inventory Score</div>
-                        <div class="metric-change positive">Optimized</div>
+                        <div class="metric-value" id="inventoryOptimization">0%</div>
+                        <div class="metric-label">Revenue Concentration (Top 3 Fabrics)</div>
+                        <div class="metric-change positive">—</div>
                     </div>
                 </div>
             </div>
+
+            <div class="ai-status-banner" id="aiStatusBanner" style="display: none;"></div>
 
             <!-- Detailed Analysis -->
             <div class="analysis-results">
@@ -383,16 +385,16 @@
                 </div>
 
                 <div class="result-card">
-                    <h3>AI Recommendations</h3>
+                    <h3>Claude Recommendations</h3>
                     <div class="recommendations-list" id="recommendationsList">
-                        <!-- Dynamic recommendations -->
+                        <!-- Rendered from /.netlify/functions/analyze, or the honest fallback -->
                     </div>
                 </div>
 
                 <div class="result-card">
-                    <h3>Predictive Insights</h3>
+                    <h3>Claude Insights</h3>
                     <div class="insights-grid" id="insightsGrid">
-                        <!-- Dynamic insights -->
+                        <!-- Rendered from /.netlify/functions/analyze, or the honest fallback -->
                     </div>
                 </div>
             </div>

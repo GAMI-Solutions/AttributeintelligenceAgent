@@ -1,410 +1,532 @@
-// analysis-engine.js - AI Analysis and Processing Module
+// analysis-engine.js - Real Aggregation + Real Claude-Backed Reasoning
+//
+// Scout/Analyst work (this file) stays deterministic JavaScript: every number
+// here is computed directly from the loaded CSV. Strategy/Action reasoning
+// (insights/recommendations copy) comes from an async call to
+// /.netlify/functions/analyze, which forwards ONLY the aggregated JSON below
+// (never the raw CSV) to the Anthropic API. If that call fails, the UI shows
+// the computed aggregates with an honest banner instead of any fabricated text.
 
 const analysisEngine = (function() {
     'use strict';
-    
+
     let selectedAnalysis = null;
     let chart = null;
     let processingStartTime = 0;
-    
-    // Select analysis type
-    function selectAnalysis(type) {
+
+    const CORE_V1_COLUMNS = [
+        'product_id', 'product_name', 'category', 'style', 'fit', 'fabric', 'color',
+        'price', 'views', 'cart_adds', 'purchases', 'revenue'
+    ];
+    const V2_MARKER_COLUMNS = ['normalized_fabric', 'normalized_color', 'region', 'customer_age_group'];
+    const ATTRIBUTE_DIMENSIONS = ['fabric', 'color', 'fit', 'style', 'category'];
+    const TOP_N_PER_DIMENSION = 15;
+    const SMALL_SAMPLE_MIN_COUNT = 5;
+    const SMALL_SAMPLE_MIN_VIEWS = 500;
+
+    // ---- Selection / UI wiring -------------------------------------------------
+
+    function selectAnalysis(evt, type) {
         selectedAnalysis = type;
-        
-        // Update UI
+
         document.querySelectorAll('.option-card').forEach(card => {
             card.classList.remove('selected');
         });
-        event.target.closest('.option-card').classList.add('selected');
-        
+        if (evt && evt.target) {
+            evt.target.closest('.option-card').classList.add('selected');
+        }
+
         uiController.showNotification(`${type.charAt(0).toUpperCase() + type.slice(1)} analysis selected`);
     }
-    
-    // Enable analysis button
+
     function enableAnalysis() {
         const executeBtn = document.getElementById('executeBtn');
         if (executeBtn) {
             executeBtn.disabled = false;
         }
     }
-    
-    // Execute analysis
-    function executeAnalysis() {
+
+    // ---- Execution --------------------------------------------------------------
+
+    async function executeAnalysis() {
         const data = dataLoader.getData();
-        
+
         if (!data || data.length === 0) {
             uiController.showNotification('Please load data first', 'error');
             return;
         }
-        
+
         if (!selectedAnalysis) {
             uiController.showNotification('Please select an analysis type', 'error');
             return;
         }
-        
+
         processingStartTime = Date.now();
-        
-        // Show processing overlay
+        hideAiBanner();
         uiController.showProcessingOverlay();
-        updateProcessingStatus('Initializing neural networks...');
-        
-        // Activate pipeline stages
-        activatePipeline();
-        
-        // Process data with staged updates
-        const stages = [
-            { delay: 1000, status: 'Validating data integrity...', stage: 1 },
-            { delay: 2000, status: 'Extracting product features...', stage: 2 },
-            { delay: 3000, status: 'Running ML algorithms...', stage: 3 },
-            { delay: 4000, status: 'Generating insights...', stage: 4 }
-        ];
-        
-        stages.forEach(({ delay, status, stage }) => {
-            setTimeout(() => {
-                updateProcessingStatus(status);
-                activateProcessStage(stage);
-            }, delay);
-        });
-        
-        // Complete analysis
-        setTimeout(() => {
+
+        try {
+            // Stage 1-2: real, synchronous aggregation (this is genuinely fast).
+            updateProcessingStatus('Ingesting and validating catalog data...');
+            activateProcessStage(1);
+            const results = analyzeProductData(data);
+            activateProcessStage(2);
+
+            // Stage 3: hand the aggregates (never the raw CSV) to the Strategy Agent.
+            updateProcessingStatus('Strategy Agent analyzing via Claude...');
+            activateProcessStage(3);
+            if (typeof agenticAI !== 'undefined') {
+                agenticAI.onAnalysisStart(selectedAnalysis, results);
+            }
+
+            let apiResponse = null;
+            let apiError = null;
+            try {
+                apiResponse = await fetchAnalysis(selectedAnalysis, results);
+            } catch (err) {
+                apiError = err;
+            }
+
+            activateProcessStage(4);
+            updateProcessingStatus(apiError ? 'AI insights unavailable...' : 'Rendering insights and recommendations...');
+
             const processingTime = ((Date.now() - processingStartTime) / 1000).toFixed(1);
             uiController.updateElement('processingTime', processingTime + 's');
-            
-            processAnalysis(data);
+
+            if (apiError) {
+                console.error('Analyze function error:', apiError);
+                displayFallback(results, apiError.message);
+                if (typeof agenticAI !== 'undefined') {
+                    agenticAI.onAnalysisError(apiError.message);
+                }
+                uiController.showNotification('AI insights unavailable — showing computed metrics only.', 'error');
+            } else {
+                displayResults(results, apiResponse);
+                if (typeof agenticAI !== 'undefined') {
+                    agenticAI.onAnalysisComplete(apiResponse, results);
+                }
+                uiController.showNotification('Analysis complete. Insights generated by Claude from your real aggregates.');
+            }
+
+            const resultsSection = document.getElementById('resultsSection');
+            if (resultsSection) {
+                resultsSection.style.display = 'block';
+                resultsSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        } finally {
             uiController.hideProcessingOverlay();
             deactivateProcessStages();
-        }, 5000);
+        }
     }
-    
-    // Update processing status
+
     function updateProcessingStatus(status) {
         const statusEl = document.getElementById('processStatus');
         if (statusEl) {
             statusEl.textContent = status;
         }
     }
-    
-    // Activate process stage
+
     function activateProcessStage(stage) {
         const stageEl = document.querySelector(`.process-stage[data-stage="${stage}"]`);
         if (stageEl) {
             stageEl.classList.add('active');
         }
     }
-    
-    // Deactivate all process stages
+
     function deactivateProcessStages() {
         document.querySelectorAll('.process-stage').forEach(stage => {
             stage.classList.remove('active');
         });
     }
-    
-    // Activate pipeline animation
-    function activatePipeline() {
-        const stages = ['stage-ingest', 'stage-process', 'stage-analyze', 'stage-insights', 'stage-recommend'];
-        
-        stages.forEach((stageId, index) => {
-            setTimeout(() => {
-                const stage = document.getElementById(stageId);
-                if (stage) {
-                    stage.classList.add('active');
-                    stage.querySelector('.stage-status').textContent = 'Processing';
-                    
-                    // Mark as complete after processing
-                    setTimeout(() => {
-                        stage.querySelector('.stage-status').textContent = 'Complete';
-                    }, 800);
-                }
-            }, index * 800);
-        });
-        
-        // Reset pipeline after completion
-        setTimeout(() => {
-            stages.forEach(stageId => {
-                const stage = document.getElementById(stageId);
-                if (stage) {
-                    stage.classList.remove('active');
-                    stage.querySelector('.stage-status').textContent = 'Ready';
-                }
-            });
-        }, 6000);
-    }
-    
-    // Process analysis
-    function processAnalysis(data) {
-        const results = analyzeProductData(data);
-        displayResults(results);
-        
-        // Show results section
-        const resultsSection = document.getElementById('resultsSection');
-        if (resultsSection) {
-            resultsSection.style.display = 'block';
-            resultsSection.scrollIntoView({ behavior: 'smooth' });
+
+    // ---- Real aggregation (Scout + Analyst work) --------------------------------
+
+    function detectSchema(data) {
+        const keys = Object.keys(data[0] || {});
+        const hasV2Markers = V2_MARKER_COLUMNS.some(col => keys.includes(col));
+        const missingCore = CORE_V1_COLUMNS.filter(col => !keys.includes(col));
+
+        let schema = 'unknown';
+        if (missingCore.length === 0) {
+            schema = hasV2Markers ? 'v2' : 'v1';
         }
-        
-        uiController.showNotification('AI analysis complete! Insights ready for review.');
+
+        return { schema, missingCore, columnCount: keys.length };
     }
-    
-    // Analyze product data
+
+    function toNumber(value) {
+        const n = parseFloat(value);
+        return Number.isFinite(n) ? n : 0;
+    }
+
     function analyzeProductData(data) {
-        const results = {
-            topAttribute: null,
-            conversionRate: 0,
-            revenueImpact: 0,
-            inventoryScore: 0,
-            recommendations: [],
-            insights: [],
-            attributeScores: {}
+        const { schema, missingCore } = detectSchema(data);
+
+        const attributeAggregates = {};
+        ATTRIBUTE_DIMENSIONS.forEach(dim => {
+            attributeAggregates[dim] = aggregateDimension(data, dim);
+        });
+
+        const catalogTotals = data.reduce((acc, product) => {
+            acc.revenue += toNumber(product.revenue);
+            acc.views += toNumber(product.views);
+            acc.cartAdds += toNumber(product.cart_adds);
+            acc.purchases += toNumber(product.purchases);
+            acc.returnRateSum += toNumber(product.return_rate);
+            acc.ratingSum += toNumber(product.customer_rating);
+            return acc;
+        }, { revenue: 0, views: 0, cartAdds: 0, purchases: 0, returnRateSum: 0, ratingSum: 0 });
+
+        const catalogSummary = {
+            schema,
+            missingColumns: missingCore,
+            totalProducts: data.length,
+            totalRevenue: catalogTotals.revenue,
+            totalViews: catalogTotals.views,
+            totalCartAdds: catalogTotals.cartAdds,
+            totalPurchases: catalogTotals.purchases,
+            overallConversionRate: catalogTotals.views > 0 ? catalogTotals.purchases / catalogTotals.views : null,
+            avgReturnRate: data.length > 0 ? catalogTotals.returnRateSum / data.length : null,
+            avgRating: data.length > 0 ? catalogTotals.ratingSum / data.length : null,
         };
-        
-        // Calculate attribute performance
-        const attributes = ['fabric', 'fit', 'style', 'category'];
-        attributes.forEach(attr => {
-            results.attributeScores[attr] = {};
-            data.forEach(product => {
-                const key = product[attr];
-                if (!key) return;
-                
-                if (!results.attributeScores[attr][key]) {
-                    results.attributeScores[attr][key] = {
-                        count: 0,
-                        revenue: 0,
-                        conversion: 0,
-                        rating: 0,
-                        purchases: 0,
-                        views: 0
-                    };
-                }
-                
-                const score = results.attributeScores[attr][key];
-                score.count++;
-                score.revenue += parseFloat(product.revenue) || 0;
-                score.purchases += parseFloat(product.purchases) || 0;
-                score.views += parseFloat(product.views) || 0;
-                score.rating += parseFloat(product.customer_rating) || 0;
-            });
-            
-            // Calculate conversion rates
-            Object.keys(results.attributeScores[attr]).forEach(key => {
-                const score = results.attributeScores[attr][key];
-                if (score.views > 0) {
-                    score.conversion = (score.purchases / score.views * 100).toFixed(2);
-                }
-                if (score.count > 0) {
-                    score.rating = (score.rating / score.count).toFixed(1);
-                }
-            });
-        });
-        
-        // Find top performing attribute
-        let maxRevenue = 0;
-        let topAttr = '';
-        Object.keys(results.attributeScores.fabric || {}).forEach(fabric => {
-            if (results.attributeScores.fabric[fabric].revenue > maxRevenue) {
-                maxRevenue = results.attributeScores.fabric[fabric].revenue;
-                topAttr = fabric;
-            }
-        });
-        results.topAttribute = topAttr || 'Nulu';
-        
-        // Calculate overall metrics
-        let totalRevenue = 0;
-        let totalPurchases = 0;
-        let totalViews = 0;
-        
-        data.forEach(product => {
-            totalRevenue += parseFloat(product.revenue) || 0;
-            totalPurchases += parseFloat(product.purchases) || 0;
-            totalViews += parseFloat(product.views) || 0;
-        });
-        
-        results.conversionRate = totalViews > 0 ? ((totalPurchases / totalViews) * 100).toFixed(2) : '0';
-        results.revenueImpact = totalRevenue;
-        results.inventoryScore = Math.min(95, Math.floor(85 + Math.random() * 10));
-        
-        // Generate recommendations based on analysis type
-        results.recommendations = generateRecommendations(selectedAnalysis, results.attributeScores);
-        results.insights = generateInsights(data, results.attributeScores);
-        
-        return results;
-    }
-    
-    // Generate recommendations
-    function generateRecommendations(type, attributeScores) {
-        const recommendations = {
-            inventory: [
-                {
-                    title: 'Increase High-Performance Fabric Inventory',
-                    description: 'Top-performing fabrics show 34% higher conversion. Increase stock by 40% for peak season.',
-                    impact: '+$2.4M projected revenue'
-                },
-                {
-                    title: 'Optimize Size Distribution',
-                    description: 'Adjust size curves based on sell-through data. Focus on core sizes 4-12.',
-                    impact: '-15% markdown risk'
-                },
-                {
-                    title: 'Seasonal Color Strategy',
-                    description: 'Prioritize seasonal colors with 2.3x sell-through rate.',
-                    impact: '+18% inventory turnover'
-                }
-            ],
-            pricing: [
-                {
-                    title: 'Premium Pricing for Top Attributes',
-                    description: 'High-demand items support 8-12% price increase without volume impact.',
-                    impact: '+$1.8M margin improvement'
-                },
-                {
-                    title: 'Dynamic Markdown Strategy',
-                    description: 'Implement algorithmic discounting for slow-moving inventory.',
-                    impact: '+22% sell-through rate'
-                },
-                {
-                    title: 'Bundle Pricing Optimization',
-                    description: 'Create value bundles with complementary products.',
-                    impact: '+$65 average order value'
-                }
-            ],
-            customer: [
-                {
-                    title: 'Segment-Specific Targeting',
-                    description: 'Focus on high-value segments with personalized offerings.',
-                    impact: '+$3.2M from top segments'
-                },
-                {
-                    title: 'Personalization at Scale',
-                    description: 'Deploy AI-driven product recommendations.',
-                    impact: '+28% repeat purchase rate'
-                },
-                {
-                    title: 'Loyalty Program Enhancement',
-                    description: 'Tier benefits based on purchase behavior.',
-                    impact: '+15% customer lifetime value'
-                }
-            ],
-            recommendations: [
-                {
-                    title: 'Cross-Category Recommendations',
-                    description: 'Suggest complementary products based on purchase patterns.',
-                    impact: '+32% attachment rate'
-                },
-                {
-                    title: 'Trending Product Push',
-                    description: 'Promote products with accelerating demand signals.',
-                    impact: '+45% discovery rate'
-                },
-                {
-                    title: 'Personalized Homepages',
-                    description: 'Customize product grids based on individual preferences.',
-                    impact: '+18% click-through rate'
-                }
-            ]
+
+        const funnelStats = {
+            totalViews: catalogTotals.views,
+            totalCartAdds: catalogTotals.cartAdds,
+            totalPurchases: catalogTotals.purchases,
+            viewToCartRate: catalogTotals.views > 0 ? catalogTotals.cartAdds / catalogTotals.views : null,
+            cartToPurchaseRate: catalogTotals.cartAdds > 0 ? catalogTotals.purchases / catalogTotals.cartAdds : null,
+            overallConversionRate: catalogSummary.overallConversionRate,
         };
-        
-        return recommendations[type] || recommendations.recommendations;
+
+        const anomalies = computeAnomalies(attributeAggregates);
+
+        // Revenue concentration: share of total revenue held by the top 3 fabric values.
+        const topFabrics = (attributeAggregates.fabric || []).slice(0, 3);
+        const top3Share = catalogTotals.revenue > 0
+            ? topFabrics.reduce((sum, f) => sum + f.revenue, 0) / catalogTotals.revenue
+            : 0;
+
+        const topAttributeEntry = findTopRevenueAttribute(attributeAggregates);
+
+        return {
+            catalogSummary,
+            attributeAggregates,
+            funnelStats,
+            anomalies,
+            topAttribute: topAttributeEntry ? topAttributeEntry.value : 'N/A',
+            topAttributeDimension: topAttributeEntry ? topAttributeEntry.dimension : null,
+            conversionRate: catalogSummary.overallConversionRate,
+            revenueImpact: catalogTotals.revenue,
+            revenueConcentrationTop3: top3Share,
+        };
     }
-    
-    // Generate insights
-    function generateInsights(data, attributeScores) {
-        // Find best performing product
-        let bestProduct = data[0];
-        let maxRating = 0;
+
+    function aggregateDimension(data, dim) {
+        const groups = {};
+
         data.forEach(product => {
-            const rating = parseFloat(product.customer_rating) || 0;
-            if (rating > maxRating) {
-                maxRating = rating;
-                bestProduct = product;
+            const key = product[dim];
+            if (!key) return;
+
+            if (!groups[key]) {
+                groups[key] = { value: key, count: 0, revenue: 0, views: 0, cartAdds: 0, purchases: 0, returnRateSum: 0, ratingSum: 0 };
             }
+            const g = groups[key];
+            g.count++;
+            g.revenue += toNumber(product.revenue);
+            g.views += toNumber(product.views);
+            g.cartAdds += toNumber(product.cart_adds);
+            g.purchases += toNumber(product.purchases);
+            g.returnRateSum += toNumber(product.return_rate);
+            g.ratingSum += toNumber(product.customer_rating);
         });
-        
-        // Find top fabric
-        let topFabric = 'Nulu';
-        let maxFabricScore = 0;
-        Object.keys(attributeScores.fabric || {}).forEach(fabric => {
-            const score = attributeScores.fabric[fabric];
-            if (score.conversion > maxFabricScore) {
-                maxFabricScore = score.conversion;
-                topFabric = fabric;
-            }
-        });
-        
-        return [
-            { label: 'Best Seller', value: bestProduct.product_name || 'Align Pant', change: '+156% YoY' },
-            { label: 'Top Fabric', value: topFabric, change: `+${maxFabricScore}% conversion` },
-            { label: 'Peak Hour', value: '7-9 PM', change: '42% of sales' },
-            { label: 'Mobile Share', value: '68%', change: '+12% vs last year' },
-            { label: 'Return Rate', value: '8.2%', change: '-3.1% improvement' },
-            { label: 'NPS Score', value: '72', change: '+5 points' }
-        ];
+
+        const totalRevenue = Object.values(groups).reduce((sum, g) => sum + g.revenue, 0);
+
+        const rows = Object.values(groups).map(g => ({
+            value: g.value,
+            count: g.count,
+            revenue: g.revenue,
+            revenueShare: totalRevenue > 0 ? g.revenue / totalRevenue : 0,
+            conversionRate: g.views > 0 ? g.purchases / g.views : null,
+            cartToPurchaseRate: g.cartAdds > 0 ? g.purchases / g.cartAdds : null,
+            avgReturnRate: g.count > 0 ? g.returnRateSum / g.count : null,
+            avgRating: g.count > 0 ? g.ratingSum / g.count : null,
+            unitVelocity: g.count > 0 ? g.purchases / g.count : null,
+            views: g.views,
+            purchases: g.purchases,
+        }));
+
+        rows.sort((a, b) => b.revenue - a.revenue);
+        return rows.slice(0, TOP_N_PER_DIMENSION);
     }
-    
-    // Display results
-    function displayResults(results) {
-        // Update metrics
-        uiController.updateElement('topAttribute', results.topAttribute);
-        uiController.updateElement('conversionRate', results.conversionRate + '%');
-        uiController.updateElement('revenueImpact', '$' + (results.revenueImpact / 1000000).toFixed(1) + 'M');
-        uiController.updateElement('inventoryOptimization', results.inventoryScore);
-        
-        // Update metric changes
-        document.querySelectorAll('.metric-change').forEach((el, index) => {
-            el.textContent = '+' + (Math.random() * 30 + 10).toFixed(1) + '%';
+
+    function findTopRevenueAttribute(attributeAggregates) {
+        let best = null;
+        Object.keys(attributeAggregates).forEach(dim => {
+            const top = attributeAggregates[dim][0];
+            if (top && (!best || top.revenue > best.revenue)) {
+                best = { dimension: dim, value: top.value, revenue: top.revenue };
+            }
         });
-        
-        // Display recommendations
+        return best;
+    }
+
+    // Real statistical outlier + small-sample detection (no fabricated confidence scores).
+    function computeAnomalies(attributeAggregates) {
+        const anomalies = [];
+
+        Object.keys(attributeAggregates).forEach(dim => {
+            const rows = attributeAggregates[dim];
+            const conversionRates = rows.map(r => r.conversionRate).filter(v => v !== null);
+            const returnRates = rows.map(r => r.avgReturnRate).filter(v => v !== null);
+
+            const convStats = meanAndStdDev(conversionRates);
+            const returnStats = meanAndStdDev(returnRates);
+
+            rows.forEach(row => {
+                if (row.conversionRate !== null && convStats.stdDev > 0) {
+                    const deviation = (row.conversionRate - convStats.mean) / convStats.stdDev;
+                    if (Math.abs(deviation) > 1) {
+                        anomalies.push({
+                            dimension: dim,
+                            value: row.value,
+                            metric: 'conversionRate',
+                            catalogMean: convStats.mean,
+                            stdDev: convStats.stdDev,
+                            deviation,
+                            direction: deviation > 0 ? 'above' : 'below',
+                            n: row.count,
+                            views: row.views,
+                            flag: 'outlier',
+                        });
+                    }
+                }
+                if (row.avgReturnRate !== null && returnStats.stdDev > 0) {
+                    const deviation = (row.avgReturnRate - returnStats.mean) / returnStats.stdDev;
+                    if (Math.abs(deviation) > 1) {
+                        anomalies.push({
+                            dimension: dim,
+                            value: row.value,
+                            metric: 'returnRate',
+                            catalogMean: returnStats.mean,
+                            stdDev: returnStats.stdDev,
+                            deviation,
+                            direction: deviation > 0 ? 'above' : 'below',
+                            n: row.count,
+                            views: row.views,
+                            flag: 'outlier',
+                        });
+                    }
+                }
+                if (row.count < SMALL_SAMPLE_MIN_COUNT || row.views < SMALL_SAMPLE_MIN_VIEWS) {
+                    anomalies.push({
+                        dimension: dim,
+                        value: row.value,
+                        metric: 'sampleSize',
+                        n: row.count,
+                        views: row.views,
+                        flag: 'small_sample',
+                    });
+                }
+            });
+        });
+
+        return anomalies.slice(0, 40);
+    }
+
+    function meanAndStdDev(values) {
+        if (!values.length) return { mean: 0, stdDev: 0 };
+        const mean = values.reduce((a, b) => a + b, 0) / values.length;
+        const variance = values.reduce((a, b) => a + (b - mean) ** 2, 0) / values.length;
+        return { mean, stdDev: Math.sqrt(variance) };
+    }
+
+    // ---- Payload construction + the one real network call -----------------------
+
+    function buildPayload(analysisType, results) {
+        let attributeAggregates = results.attributeAggregates;
+
+        let payload = {
+            analysisType,
+            catalogSummary: results.catalogSummary,
+            attributeAggregates,
+            funnelStats: results.funnelStats,
+            anomalies: results.anomalies,
+        };
+
+        // Safety trim: keep the payload well under the function's 100KB hard cap
+        // (and comfortably under the ~50KB target) by shrinking per-dimension rows.
+        let size = new Blob([JSON.stringify(payload)]).size;
+        let topN = TOP_N_PER_DIMENSION;
+        while (size > 50 * 1024 && topN > 3) {
+            topN -= 3;
+            const trimmed = {};
+            Object.keys(attributeAggregates).forEach(dim => {
+                trimmed[dim] = attributeAggregates[dim].slice(0, topN);
+            });
+            payload = { ...payload, attributeAggregates: trimmed, anomalies: payload.anomalies.slice(0, 20) };
+            size = new Blob([JSON.stringify(payload)]).size;
+        }
+
+        return payload;
+    }
+
+    async function fetchAnalysis(analysisType, results) {
+        const payload = buildPayload(analysisType, results);
+
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 12000);
+
+        try {
+            const res = await fetch('/.netlify/functions/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+                signal: controller.signal,
+            });
+
+            const body = await res.json().catch(() => ({}));
+
+            if (!res.ok) {
+                throw new Error(body.error || `Analysis request failed (HTTP ${res.status})`);
+            }
+
+            return body;
+        } finally {
+            clearTimeout(timeout);
+        }
+    }
+
+    // ---- Rendering ----------------------------------------------------------------
+
+    function formatPercent(value, digits = 1) {
+        return value === null || value === undefined ? 'n/a' : (value * 100).toFixed(digits) + '%';
+    }
+
+    function displayResults(results, apiResponse) {
+        renderMetrics(results);
+
         const recContainer = document.getElementById('recommendationsList');
         if (recContainer) {
-            recContainer.innerHTML = results.recommendations.map(rec => `
-                <div class="recommendation-item">
-                    <h4>${rec.title}</h4>
-                    <p>${rec.description}</p>
-                    <small style="color: var(--primary); font-weight: 600;">${rec.impact}</small>
-                </div>
-            `).join('');
+            const recs = (apiResponse && apiResponse.recommendations) || [];
+            recContainer.innerHTML = recs.length
+                ? recs.map(rec => `
+                    <div class="recommendation-item">
+                        <h4>${escapeHtml(rec.action || 'Recommendation')}</h4>
+                        <p>${escapeHtml(rec.rationale || '')}</p>
+                        <small style="color: var(--primary); font-weight: 600;">${escapeHtml(rec.evidence || '')}</small>
+                    </div>
+                `).join('')
+                : '<p>Claude did not return any recommendations for this data.</p>';
         }
-        
-        // Display insights
+
         const insightsContainer = document.getElementById('insightsGrid');
         if (insightsContainer) {
-            insightsContainer.innerHTML = results.insights.map(insight => `
+            const insights = (apiResponse && apiResponse.insights) || [];
+            insightsContainer.innerHTML = insights.length
+                ? insights.map(insight => `
+                    <div class="insight-item">
+                        <div class="insight-value">${escapeHtml(insight.title || '')}</div>
+                        <div class="insight-label">${escapeHtml(insight.detail || '')}</div>
+                        <small style="color: var(--success); font-weight: 500;">${escapeHtml(insight.evidence || '')}</small>
+                    </div>
+                `).join('')
+                : '<p>Claude did not return any insights for this data.</p>';
+        }
+
+        createAttributeChart(results.attributeAggregates);
+    }
+
+    // Honest fallback: no AI copy, just the real computed aggregates.
+    function displayFallback(results, errorMessage) {
+        showAiBanner(`AI insights unavailable (${errorMessage || 'request failed'}) — showing computed metrics only.`);
+        renderMetrics(results);
+
+        const recContainer = document.getElementById('recommendationsList');
+        if (recContainer) {
+            recContainer.innerHTML = '<p>AI-generated recommendations are unavailable right now. The computed attribute metrics below are still real.</p>';
+        }
+
+        const insightsContainer = document.getElementById('insightsGrid');
+        if (insightsContainer) {
+            const topRows = Object.keys(results.attributeAggregates).flatMap(dim =>
+                results.attributeAggregates[dim].slice(0, 1).map(row => ({ dim, row }))
+            );
+            insightsContainer.innerHTML = topRows.map(({ dim, row }) => `
                 <div class="insight-item">
-                    <div class="insight-value">${insight.value}</div>
-                    <div class="insight-label">${insight.label}</div>
-                    <small style="color: var(--success); font-weight: 500;">${insight.change}</small>
+                    <div class="insight-value">${escapeHtml(row.value)}</div>
+                    <div class="insight-label">Top ${escapeHtml(dim)} by revenue</div>
+                    <small>$${Math.round(row.revenue).toLocaleString()} · n=${row.count} · conv ${formatPercent(row.conversionRate)}</small>
                 </div>
             `).join('');
         }
-        
-        // Create attribute chart
-        createAttributeChart(results.attributeScores);
+
+        createAttributeChart(results.attributeAggregates);
     }
-    
-    // Create attribute performance chart
-    function createAttributeChart(attributeScores) {
+
+    function renderMetrics(results) {
+        uiController.updateElement('topAttribute', results.topAttribute);
+        uiController.updateElement('conversionRate', formatPercent(results.conversionRate));
+        uiController.updateElement('revenueImpact', '$' + (results.revenueImpact / 1000000).toFixed(1) + 'M');
+        uiController.updateElement('inventoryOptimization', formatPercent(results.revenueConcentrationTop3, 0));
+
+        const changeEls = document.querySelectorAll('.metric-change');
+        const changeText = [
+            `top ${results.topAttributeDimension || 'attribute'} by revenue`,
+            `n=${results.catalogSummary.totalProducts} products`,
+            `$${Math.round(results.revenueImpact).toLocaleString()} total`,
+            'top 3 fabrics by revenue',
+        ];
+        changeEls.forEach((el, i) => {
+            el.textContent = changeText[i] || '';
+            el.classList.remove('positive');
+        });
+    }
+
+    function showAiBanner(message) {
+        const banner = document.getElementById('aiStatusBanner');
+        if (banner) {
+            banner.textContent = message;
+            banner.style.display = 'block';
+        }
+    }
+
+    function hideAiBanner() {
+        const banner = document.getElementById('aiStatusBanner');
+        if (banner) {
+            banner.style.display = 'none';
+        }
+    }
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = String(str == null ? '' : str);
+        return div.innerHTML;
+    }
+
+    function createAttributeChart(attributeAggregates) {
         const ctx = document.getElementById('attrCanvas');
         if (!ctx) return;
-        
-        // Destroy existing chart
+
         if (chart) {
             chart.destroy();
         }
-        
-        // Prepare data for chart
-        const labels = Object.keys(attributeScores.fabric || {}).slice(0, 8);
-        const data = labels.map(label => {
-            const score = attributeScores.fabric[label];
-            return (score.revenue / 1000).toFixed(0);
-        });
-        
-        // Create new chart
+
+        const rows = (attributeAggregates.fabric && attributeAggregates.fabric.length)
+            ? attributeAggregates.fabric
+            : (Object.values(attributeAggregates).find(r => r.length) || []);
+
+        const labels = rows.slice(0, 8).map(r => r.value);
+        const data = rows.slice(0, 8).map(r => (r.revenue / 1000).toFixed(0));
+
         chart = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Revenue Impact ($K)',
+                    label: 'Revenue ($K)',
                     data: data,
                     backgroundColor: 'rgba(20, 110, 180, 0.8)',
                     borderColor: '#146eb4',
@@ -416,9 +538,7 @@ const analysisEngine = (function() {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        display: false
-                    },
+                    legend: { display: false },
                     tooltip: {
                         callbacks: {
                             label: function(context) {
@@ -430,28 +550,20 @@ const analysisEngine = (function() {
                 scales: {
                     y: {
                         beginAtZero: true,
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.05)'
-                        },
-                        ticks: {
-                            callback: function(value) {
-                                return '$' + value + 'K';
-                            }
-                        }
+                        grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                        ticks: { callback: function(value) { return '$' + value + 'K'; } }
                     },
-                    x: {
-                        grid: {
-                            display: false
-                        }
-                    }
+                    x: { grid: { display: false } }
                 }
             }
         });
     }
-    
+
     return {
         selectAnalysis,
         enableAnalysis,
-        executeAnalysis
+        executeAnalysis,
+        analyzeProductData,
+        detectSchema
     };
 })();

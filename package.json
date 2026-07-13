@@ -1,0 +1,12 @@
+{
+  "name": "attributeintelligenceagent",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Static retail attribute analytics demo. Aggregation runs client-side; Strategy/Action reasoning runs through a Netlify Function that calls the Anthropic API.",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev": "netlify dev"
+  }
+}

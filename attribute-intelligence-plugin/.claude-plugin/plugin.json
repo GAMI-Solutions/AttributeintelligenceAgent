@@ -1,0 +1,24 @@
+{
+  "name": "attributeintelligenceagent",
+  "version": "1.0.0",
+  "description": "Turns a product/SKU catalog export into a genuine attribute-performance analysis — real aggregation via code execution, real reasoning via Claude. Finds which fabric, color, fit, style, price band, and region actually drive revenue, conversion, and returns.",
+  "author": {
+    "name": "GAMI Solutions",
+    "email": "muthu@gami-solutions.com",
+    "url": "https://github.com/GAMI-Solutions"
+  },
+  "homepage": "https://github.com/GAMI-Solutions/attributeintelligenceagent",
+  "repository": "https://github.com/GAMI-Solutions/attributeintelligenceagent",
+  "license": "MIT",
+  "keywords": [
+    "retail",
+    "merchandising",
+    "product-analytics",
+    "attribute-analysis",
+    "assortment-planning",
+    "conversion-rate",
+    "catalog-data",
+    "sku-analytics",
+    "data-analysis"
+  ]
+}

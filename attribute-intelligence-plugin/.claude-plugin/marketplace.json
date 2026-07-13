@@ -1,0 +1,25 @@
+{
+  "name": "attributeintelligenceagent-marketplace",
+  "owner": {
+    "name": "GAMI Solutions",
+    "email": "muthu@gami-solutions.com",
+    "url": "https://github.com/GAMI-Solutions"
+  },
+  "metadata": {
+    "description": "GAMI Solutions plugins for analytics and data intelligence",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "attributeintelligenceagent",
+      "source": "./",
+      "description": "Turns a product/SKU catalog export into a genuine attribute-performance analysis — which fabric, color, fit, style, price band, and region actually drive revenue, conversion, and returns.",
+      "version": "1.0.0",
+      "author": {
+        "name": "GAMI Solutions"
+      },
+      "license": "MIT",
+      "keywords": ["retail", "merchandising", "product-analytics", "assortment-planning", "data-analysis"]
+    }
+  ]
+}

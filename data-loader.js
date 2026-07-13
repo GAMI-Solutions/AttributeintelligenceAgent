@@ -229,24 +229,46 @@ const dataLoader = (function() {
         if (preview) {
             preview.style.display = 'block';
         }
-        
+
         // Calculate stats
         const totalProducts = productData.length;
         const categories = [...new Set(productData.map(p => p.category))];
         const avgRating = (productData.reduce((sum, p) => sum + parseFloat(p.customer_rating || 0), 0) / totalProducts).toFixed(1);
         const totalRevenue = productData.reduce((sum, p) => sum + parseFloat(p.revenue || 0), 0);
-        
+
+        // Real data-completeness: % of rows with valid, parseable views/purchases/revenue.
+        const completeRows = productData.filter(p =>
+            Number.isFinite(parseFloat(p.views)) &&
+            Number.isFinite(parseFloat(p.purchases)) &&
+            Number.isFinite(parseFloat(p.revenue))
+        ).length;
+        const completeness = totalProducts > 0 ? (completeRows / totalProducts) * 100 : 0;
+
         // Update UI
         uiController.updateElement('totalProducts', totalProducts);
         uiController.updateElement('totalCategories', categories.length);
         uiController.updateElement('avgRating', avgRating);
         uiController.updateElement('totalRevenue', '$' + (totalRevenue / 1000000).toFixed(1) + 'M');
-        
+
         // Update header stats
         uiController.animateCounter('dataPointsCount', 0, totalProducts, 1000);
-        uiController.animateCounter('accuracyRate', 0, 94.3, 1000, '%');
+        uiController.animateCounter('accuracyRate', 0, completeness, 1000, '%');
+
+        // Real Scout Agent data-profiling event (no simulated confidence, just what was parsed).
+        if (typeof agenticAI !== 'undefined') {
+            const schema = analysisEngine.detectSchema(productData);
+            agenticAI.onDataLoaded({
+                fileName: currentFileName,
+                rowCount: totalProducts,
+                columnCount: schema.columnCount,
+                columns: Object.keys(productData[0] || {}),
+                schema: schema.schema,
+                missingColumns: schema.missingCore,
+                completeness,
+            });
+        }
     }
-    
+
     // Clear data
     function clearData() {
         productData = [];

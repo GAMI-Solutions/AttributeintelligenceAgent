@@ -1,34 +1,43 @@
 # Attribute Intelligence Agent
 
-A client-side web application that demonstrates an **AI-powered product attribute analytics experience** for a retail catalog (styled around Lululemon product data). It ingests product-level CSV data — attributes such as fabric, fit, style, color, and price alongside funnel metrics such as views, cart adds, purchases, revenue, and returns — aggregates performance by attribute, and presents the results through two interactive pages:
+A retail catalog attribute-analytics app (styled around Lululemon product data) with two pieces:
+
+1. **A static web app** (this repo root) — upload a product CSV, get real per-attribute aggregation (revenue, conversion rate, return rate, etc.) computed client-side, and real Claude-generated insights/recommendations reasoned over those aggregates via a Netlify Function.
+2. **A Claude plugin** ([`attribute-intelligence-plugin/`](attribute-intelligence-plugin/)) — the same attribute-intelligence methodology, packaged as a skill you can run on any product CSV directly inside a Claude conversation, no deployment required.
 
 | Page | Purpose |
 |------|---------|
-| [index.html](index.html) | **Agent console** — upload a CSV (or load generated sample data), pick an analysis type (Inventory, Pricing, Customer, Recommendations), run the animated "Agentic AI" pipeline, and review metrics, charts, insights, and recommendations. Includes a simulated multi-agent command center (Scout / Analyst / Strategy / Action agents) with a live communication log. |
-| [dashboard.html](dashboard.html) | **Strategic dashboard** — KPI cards with sparklines, attribute contribution charts, customer segment views (age group, region, price band), a filterable attribute performance table, a correlation heatmap, and seasonal trend lines. Auto-loads `sample_product_attribution_data-v2.csv` on startup. |
+| [index.html](index.html) | **Agent console** — upload a CSV (or load generated sample data), pick an analysis type (Inventory, Pricing, Customer, Recommendations), and run the analysis. Aggregation (Scout/Analyst) is deterministic JavaScript; the Strategy/Action insights and recommendations come from a real call to Claude via `/.netlify/functions/analyze`. An agent activity log shows each real step as it happens. |
+| [dashboard.html](dashboard.html) | **Strategic dashboard** — KPI cards, attribute contribution charts, customer segment views, a filterable attribute performance table, and trend lines. Auto-loads `sample_product_attribution_data-v2.csv` on startup. **Not yet rewired to Claude** — see [Known issues](#validation-notes--known-issues). |
 
-The app is **pure static HTML/CSS/JavaScript** — there is no build step, no backend, and no framework. Charts are rendered with [Chart.js](https://www.chartjs.org/) and dashboard animations with [Anime.js](https://animejs.com/), both loaded from public CDNs.
+The app is **static HTML/CSS/JavaScript plus one serverless function** — no framework, no database. Charts are rendered with [Chart.js](https://www.chartjs.org/), both loaded from a public CDN.
 
-> **Important — what is real and what is simulated:** The attribute aggregations (revenue, conversion rate = purchases ÷ views, loyalty and return-risk averages per fabric/color/fit/style/region/age group/price band) are genuinely computed from the loaded CSV. However, the "AI" elements — the neural-network processing stages, agent confidence scores, autonomous action suggestions, model accuracy counters, decision trees, and several insight/recommendation texts — are **scripted demo effects** driven by timers and `Math.random()`, not machine learning. Treat this project as a UI/UX prototype or demo, not a production analytics engine.
+> **What is real, what calls Claude, and what's still a demo:** On `index.html`, the attribute aggregations (revenue, conversion rate = purchases ÷ views, return-rate averages, funnel drop-off, statistical outliers, small-sample flags) are genuinely computed client-side from the loaded CSV — this data and the aggregated JSON (never the raw CSV) is what gets sent to `/.netlify/functions/analyze`, which calls the real Anthropic API and returns Claude's actual reasoning as the insights/recommendations you see. If that call fails, the UI shows an honest "AI insights unavailable" banner with the computed metrics — it never falls back to invented text. `dashboard.html` has **not** been rewired yet: its KPI drift, trend arrows, and confidence badge are still scripted `Math.random()` effects, not real analysis. See [DEPLOY.md](DEPLOY.md) for the scope note on that page.
 
 ## Repository layout
 
 ```
 index.html                              Agent console page
-dashboard.html                          Strategic dashboard page
+dashboard.html                          Strategic dashboard page (not yet rewired to Claude)
 
-app.js                                  Console entry point: init, keyboard shortcuts, autonomous suggestions
+app.js                                  Console entry point: init, keyboard shortcuts
 data-loader.js                          CSV upload / drag-and-drop parsing + sample data generator (console)
-analysis-engine.js                      Attribute aggregation, metrics, recommendations, results chart (console)
+analysis-engine.js                      Real aggregation, funnel/anomaly detection, payload building, and the
+                                         fetch() call to /.netlify/functions/analyze (console)
 ui-controller.js                        Notifications, overlays, counters, particle effects (shared UI helpers)
 results-exporter.js                     JSON report export + sample CSV download (console)
-agentic-ai.js                           Simulated multi-agent command center (console)
+agentic-ai.js                           Agent activity log, fed entirely by real events (console)
 
 attribute-dashboard.js                  Dashboard logic: charts, KPI animations, table, CSV export
 local-csv-loader.js                     Fetches and processes the v2 CSV for the dashboard (with fallback data)
 
+netlify/functions/analyze.js            Netlify Function: validates the aggregated payload, calls the
+                                         Anthropic API server-side, returns strict JSON insights/recommendations
+netlify.toml                            Netlify config: functions directory + static publish root
+package.json                            Minimal manifest (Node >=18, `npm run dev` -> `netlify dev`)
+
 styles.css                              Shared base styles (both pages)
-agentic-ai.css                          Agent command center styles (console)
+agentic-ai.css                          Agent activity log styles (console)
 dashboard.css                           Dashboard styles
 attribute-dashboard-additional.css      Extra dashboard styles (currently not linked from any page)
 
@@ -37,11 +46,11 @@ sample_product_attribution_data-v2.csv  v2 enriched sample data — auto-loaded 
                                         includes attr_contrib_conversion, loyalty_attribute_score,
                                         return_risk_score, region, customer_age_group, price bands, etc.)
 
-script.js                               LEGACY — old monolithic version, superseded by the modular files.
-                                        Not referenced by any page and contains a syntax error. Safe to delete.
-csv-data-loader.js                      LEGACY — uses window.fs.readFile (a sandbox-only API that does not
-                                        exist in browsers). Not referenced by any page. Safe to delete.
+attribute-intelligence-plugin/          Standalone Claude plugin packaging the same methodology (see its README)
+DEPLOY.md                               Netlify env var setup, netlify dev, and plugin install steps
 ```
+
+`script.js` and `csv-data-loader.js` (legacy, unreferenced, superseded by the modular files above) have been deleted.
 
 ## Data formats
 
@@ -61,64 +70,52 @@ Note: the CSV parser is intentionally simple — it handles quoted fields contai
 
 ## How to deploy
 
-Because this is a static site, "deployment" is just serving the folder over HTTP. **Do not open the pages via `file://`** — the dashboard loads its CSV with `fetch()`, which browsers block for local files, so you would only ever see the hard-coded fallback data. The CDN scripts (Chart.js, Anime.js) also require internet access.
+The site itself is still static, but `index.html` now depends on one serverless function, so it needs a host that runs Netlify Functions — plain static hosts (GitHub Pages, S3, Nginx) will serve the pages but the Claude-backed insights on the console will always show the "AI insights unavailable" fallback banner on those hosts, since there's no function runtime behind them.
 
-### Run locally
+**Do not open the pages via `file://`** — the dashboard's CSV `fetch()` and the console's call to `/.netlify/functions/analyze` both require an HTTP origin.
 
-From the repository root, use any static file server:
+### Netlify (recommended — required for real Claude-backed insights)
+
+1. Create a new site from this repo in Netlify.
+2. Build command: none. Publish directory: `.` (repository root). `netlify.toml` already configures the functions directory.
+3. Set the `ANTHROPIC_API_KEY` environment variable (see [DEPLOY.md](DEPLOY.md)).
+4. Deploy. `/.netlify/functions/analyze` is live automatically.
+
+### Local development
 
 ```bash
-# Python (preinstalled on macOS/Linux)
-python3 -m http.server 8000
-
-# or Node
-npx serve .
+npm install -g netlify-cli
+netlify dev
 ```
 
-Then open `http://localhost:8000/` (which serves `index.html`) or `http://localhost:8000/dashboard.html`.
+This serves the static site and runs the function locally on the same origin. See [DEPLOY.md](DEPLOY.md) for setting the API key locally.
 
-### GitHub Pages
+### Static-only hosts (GitHub Pages, S3, Nginx, etc.)
 
-1. Push the repository to GitHub (already done if you are reading this there).
-2. In the repo: **Settings → Pages → Source: Deploy from a branch**, choose `main` and `/ (root)`, then save.
-3. The site publishes at `https://<username>.github.io/AttributeintelligenceAgent/`.
-
-No build configuration is needed since everything is served from the root.
-
-### Netlify / Vercel / Cloudflare Pages
-
-Create a new project from the repo and set:
-
-- **Build command:** none
-- **Publish / output directory:** `.` (repository root)
-
-### Nginx / Apache / S3 + CloudFront
-
-Copy the entire repository contents (including both CSV files) to the web root or bucket. Ensure `.csv` is served with a readable content type (default `text/csv` is fine) and that `sample_product_attribution_data-v2.csv` sits in the same directory as `dashboard.html`.
+These will serve `index.html` and `dashboard.html` fine, but there is no function runtime, so every analysis on the console will hit the honest fallback banner instead of real Claude insights. Use these only if you specifically want the deterministic-aggregates-only experience.
 
 ## Usage
 
 1. Open the app — the agent console loads with an animated splash.
-2. Click **Load Sample Lululemon Data** (or upload/drag-drop your own v1-format CSV).
+2. Click **Load Sample Lululemon Data** (or upload/drag-drop your own v1-format CSV). The Scout Agent logs a real profile of what it parsed (row count, schema, missing columns).
 3. Select an analysis card (Inventory Optimization, Dynamic Pricing, Customer Insights, or Product Recommendations) and click **Execute AI Analysis**.
-4. Review the metrics dashboard, attribute revenue chart, recommendations, and insights. Export a JSON report or download a sample CSV from the action panel.
-5. Optionally click **Activate Agents** in the Agentic AI Command Center to watch the simulated multi-agent activity feed.
-6. Click **Strategic Dashboard** in the header to open the analytics dashboard, which auto-loads the v2 dataset; use the Conversion/Loyalty/Returns toggles and table filters to explore, or **Export** to download the attribute analysis as CSV.
+4. The Analyst Agent aggregates the real numbers first; the Strategy Agent then sends those aggregates (never the raw CSV) to Claude via `/.netlify/functions/analyze`, and the Action Agent surfaces the ranked recommendations that come back.
+5. Review the metrics dashboard, attribute revenue chart, Claude-generated recommendations, and insights. Export a JSON report or download a sample CSV from the action panel.
+6. Click **Strategic Dashboard** in the header to open the analytics dashboard, which auto-loads the v2 dataset; use the Conversion/Loyalty/Returns toggles and table filters to explore, or **Export** to download the attribute analysis as CSV. (This page is still a UI demo — see Known issues.)
 
-Keyboard shortcuts on the console: `Ctrl+Enter` run analysis · `Ctrl+L` load sample data · `Ctrl+D` download sample CSV · `Ctrl+A` toggle agents · `Esc` close overlays. (Note these override the browser's default select-all and bookmark shortcuts while the page is focused.)
+Keyboard shortcuts on the console: `Ctrl+Enter` run analysis · `Ctrl+L` load sample data · `Ctrl+D` download sample CSV · `Ctrl+A` clear the agent activity log · `Esc` close overlays. (Note these override the browser's default select-all and bookmark shortcuts while the page is focused.)
 
 ## Validation notes & known issues
 
-All files loaded by the two pages pass a JavaScript syntax check (`node --check`). Issues worth knowing about:
+All JavaScript files pass a syntax check (`node --check`). Issues worth knowing about:
 
-- **`script.js` is broken but unused.** It has an unterminated string on line 412. Neither page references it — it is a leftover pre-modularization version. Delete it (along with `csv-data-loader.js`) to avoid confusion.
-- **Simulated analytics.** Several displayed figures are hard-coded or randomized (e.g. "94.3% accuracy", agent confidence, "Peak Hour 7–9 PM", metric-change percentages, correlation heatmap values, seasonal trends, journey-stage numbers on the dashboard). Only the attribute aggregation figures reflect the loaded data.
-- **Dashboard data drift.** `attribute-dashboard.js` "refreshes" every 10 seconds by adding small random deltas to the attribute metrics, so numbers slowly drift away from the actual CSV values the longer the page stays open.
-- **Non-standard `event` usage.** `analysis-engine.js` reads the implicit global `event` inside `selectAnalysis()`. This works in current Chrome/Edge/Firefox/Safari but is deprecated.
-- **Duplicate columns in the v2 CSV.** The header contains `category.1`, `purchases.2`, `return_rate.3`, etc. (artifacts of a pandas export). The loader reads the columns it needs by exact name, so this is harmless, but be aware when regenerating the dataset.
-- **Untrusted CSV caution.** Parsed CSV values are inserted into the DOM via `innerHTML` without escaping. Only load CSV files you trust.
-- **No offline mode.** Chart.js and Anime.js come from CDNs; the pages will render without charts/animations if offline. Vendor the libraries locally if you need air-gapped deployment.
+- **`dashboard.html` is still a UI demo, not yet Claude-backed.** `attribute-dashboard.js`'s KPI drift (small random deltas every 10 seconds), trend arrows, sparklines, and its hardcoded "94.2% Confidence" badge are scripted effects, not real analysis. This page was outside the Phase 2 task list; see [DEPLOY.md](DEPLOY.md#known-scope-note).
+- **The console (`index.html`) is Claude-backed.** Attribute aggregation, funnel/anomaly detection, and the metrics dashboard are computed from the real CSV. Insights and recommendations come from `/.netlify/functions/analyze`, which calls the real Anthropic API. If that call fails or times out, the UI shows the computed metrics with an honest banner — never invented insight text.
+- **Duplicate columns in the v2 CSV.** The header contains `category.1`, `purchases.2`, `return_rate.3`, etc. (artifacts of a pandas export). The loaders read columns they need by exact name, so this is harmless, but be aware when regenerating the dataset.
+- **Untrusted CSV caution.** Parsed CSV values are inserted into the DOM. `analysis-engine.js` escapes attribute names and Claude's response text before rendering; `attribute-dashboard.js` on the separate dashboard page does not — only load CSV files you trust.
+- **No offline mode.** Chart.js comes from a CDN; pages render without charts if offline.
+- **Payload size.** The console sends only aggregated JSON to the function (top ~15 attribute values per dimension, catalog totals, funnel rates, anomaly list) — typically a few KB, well under the function's 100KB hard limit. The raw CSV is never transmitted to the function.
 
 ## License
 
-No license file is present. Add one before distributing.
+The web app itself has no license file — add one before distributing. The Claude plugin in `attribute-intelligence-plugin/` is separately licensed under MIT (see its own `LICENSE`).

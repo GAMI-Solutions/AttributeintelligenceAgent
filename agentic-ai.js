@@ -1,62 +1,38 @@
-// agentic-ai.js - Agentic AI Autonomous Capabilities Module
-// Updated to remove Real-Time Data Stream and add Attribute Analysis Intelligence
+// agentic-ai.js - Agent Activity Log, fed by real events only
+//
+// This module no longer runs any background setInterval loop that invents
+// anomalies, confidence scores, or "model accuracy." Every card and log line
+// here is written by a real event fired from data-loader.js or
+// analysis-engine.js, carrying real numbers computed from the loaded CSV
+// (Scout/Analyst) or the actual Claude API response (Strategy/Action).
 
 const agenticAI = (function() {
     'use strict';
-    
-    // Agent states
+
     const agents = {
-        scout: {
-            name: 'Scout Agent',
-            status: 'idle',
-            icon: '🔍',
-            role: 'Data Monitoring & Anomaly Detection',
-            confidence: 0
-        },
-        analyst: {
-            name: 'Analyst Agent',
-            status: 'idle',
-            icon: '📊',
-            role: 'Deep Analysis & Pattern Recognition',
-            confidence: 0
-        },
-        strategy: {
-            name: 'Strategy Agent',
-            status: 'idle',
-            icon: '🎯',
-            role: 'Strategic Planning & Optimization',
-            confidence: 0
-        },
-        action: {
-            name: 'Action Agent',
-            status: 'idle',
-            icon: '⚡',
-            role: 'Autonomous Execution & Implementation',
-            confidence: 0
-        }
+        scout: { name: 'Scout Agent', status: 'idle', icon: '🔍', role: 'Data Profiling & Schema Detection' },
+        analyst: { name: 'Analyst Agent', status: 'idle', icon: '📊', role: 'Attribute Aggregation & Anomaly Detection' },
+        strategy: { name: 'Strategy Agent', status: 'idle', icon: '🎯', role: 'Claude-Backed Strategic Reasoning' },
+        action: { name: 'Action Agent', status: 'idle', icon: '⚡', role: 'Recommendation Synthesis' }
     };
-    
-    let isMonitoring = false;
-    let monitoringInterval = null;
-    let learningData = [];
-    let decisionHistory = [];
-    
-    // Initialize Agentic AI System
+
+    const ATTRIBUTE_DIMENSIONS = ['fabric', 'color', 'fit', 'style', 'category'];
+
     function initialize() {
         createAgentDashboard();
         setupAttributeAnalysisCapabilities();
-        initializeDecisionEngine();
     }
-    
-    // Create Agent Dashboard UI
+
+    // ---- Dashboard construction ---------------------------------------------
+
     function createAgentDashboard() {
         const dashboard = document.createElement('div');
         dashboard.className = 'agent-dashboard';
         dashboard.innerHTML = `
             <div class="agent-header">
-                <h3>🤖 Agentic AI Command Center</h3>
-                <button class="btn-agent-toggle" onclick="agenticAI.toggleAgents()">
-                    <span class="toggle-text">Activate Agents</span>
+                <h3>🤖 Agent Activity</h3>
+                <button class="btn-agent-toggle" onclick="agenticAI.clearLog()">
+                    <span class="toggle-text">Clear Log</span>
                 </button>
             </div>
             <div class="agent-grid">
@@ -68,123 +44,15 @@ const agenticAI = (function() {
             </div>
             <div class="decision-tree-container" id="decisionTreeContainer"></div>
         `;
-        
-        // Insert after control panel
+
         const controlPanel = document.querySelector('.control-panel');
         if (controlPanel) {
             controlPanel.parentNode.insertBefore(dashboard, controlPanel.nextSibling);
         }
+
+        logCommunication('Agents ready. Load data to begin — Scout profiles it immediately, the rest activate when you run an analysis.', 'system');
     }
-    
-    // Setup Attribute Analysis Capabilities
-    function setupAttributeAnalysisCapabilities() {
-        const attributePanel = document.createElement('div');
-        attributePanel.className = 'attribute-analysis-panel';
-        attributePanel.innerHTML = `
-            <div class="panel-header">
-                <h4>🎯 Attribute Analysis Intelligence</h4>
-                <span class="panel-status">AI-Powered Attribution Modeling</span>
-            </div>
-            
-            <div class="capability-grid">
-                <div class="capability-card">
-                    <div class="capability-icon">🔗</div>
-                    <h5>Attribute Mapping</h5>
-                    <p>Extract and structure product metadata including style, fit, fabric, color, and price points</p>
-                    <div class="capability-metric">
-                        <span class="metric-label">Attributes Tracked:</span>
-                        <span class="metric-value" id="attributesTracked">0</span>
-                    </div>
-                </div>
-                
-                <div class="capability-card">
-                    <div class="capability-icon">👥</div>
-                    <h5>Customer Interaction Analysis</h5>
-                    <p>Link customer behavior (views, clicks, purchases, returns) to specific product attributes</p>
-                    <div class="capability-metric">
-                        <span class="metric-label">Interactions Analyzed:</span>
-                        <span class="metric-value" id="interactionsAnalyzed">0</span>
-                    </div>
-                </div>
-                
-                <div class="capability-card">
-                    <div class="capability-icon">📈</div>
-                    <h5>Attribution Modeling</h5>
-                    <p>AI determines which attributes drive conversion and customer loyalty</p>
-                    <div class="capability-metric">
-                        <span class="metric-label">Model Accuracy:</span>
-                        <span class="metric-value" id="modelAccuracy">0%</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="lifecycle-tracker">
-                <h5>Customer Lifecycle Attribution</h5>
-                <div class="lifecycle-stages">
-                    <div class="lifecycle-stage" id="stage-intro">
-                        <div class="stage-icon">🆕</div>
-                        <span>Introduction</span>
-                        <div class="stage-progress"></div>
-                    </div>
-                    <div class="lifecycle-stage" id="stage-engage">
-                        <div class="stage-icon">👁️</div>
-                        <span>Engagement</span>
-                        <div class="stage-progress"></div>
-                    </div>
-                    <div class="lifecycle-stage" id="stage-purchase">
-                        <div class="stage-icon">🛒</div>
-                        <span>Purchase</span>
-                        <div class="stage-progress"></div>
-                    </div>
-                    <div class="lifecycle-stage" id="stage-rebuy">
-                        <div class="stage-icon">🔄</div>
-                        <span>Rebuy</span>
-                        <div class="stage-progress"></div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="influential-attributes">
-                <h5>Most Influential Attributes</h5>
-                <div class="attributes-ranking" id="attributesRanking">
-                    <div class="attribute-rank">
-                        <span class="rank-number">1</span>
-                        <span class="rank-name">Loading...</span>
-                        <span class="rank-impact">--</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="integration-status">
-                <h5>System Integration</h5>
-                <div class="integration-items">
-                    <div class="integration-item">
-                        <span class="integration-icon">✅</span>
-                        <span>Product Catalog</span>
-                    </div>
-                    <div class="integration-item">
-                        <span class="integration-icon">✅</span>
-                        <span>CRM System</span>
-                    </div>
-                    <div class="integration-item">
-                        <span class="integration-icon">✅</span>
-                        <span>Transaction Logs</span>
-                    </div>
-                    <div class="integration-item">
-                        <span class="integration-icon">🔄</span>
-                        <span>Real-time Analytics</span>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        const dashboard = document.querySelector('.agent-dashboard');
-        if (dashboard) {
-            dashboard.appendChild(attributePanel);
-        }
-    }
-    
-    // Create individual agent card
+
     function createAgentCard(key, agent) {
         return `
             <div class="agent-card" id="agent-${key}">
@@ -194,235 +62,290 @@ const agenticAI = (function() {
                     <h4>${agent.name}</h4>
                     <p class="agent-role">${agent.role}</p>
                     <div class="agent-metrics">
-                        <span class="agent-status">${agent.status}</span>
-                        <span class="agent-confidence">Confidence: <span id="${key}-confidence">0%</span></span>
+                        <span class="agent-status" id="${key}-status">${agent.status}</span>
                     </div>
-                    <div class="agent-progress" id="${key}-progress"></div>
+                    <div class="agent-detail" id="${key}-detail">Waiting for data...</div>
                 </div>
             </div>
         `;
     }
-    
-    // Toggle agent activation
-    function toggleAgents() {
-        isMonitoring = !isMonitoring;
-        const toggleBtn = document.querySelector('.btn-agent-toggle .toggle-text');
-        
-        if (isMonitoring) {
-            activateAgents();
-            toggleBtn.textContent = 'Deactivate Agents';
-        } else {
-            deactivateAgents();
-            toggleBtn.textContent = 'Activate Agents';
+
+    function setupAttributeAnalysisCapabilities() {
+        const attributePanel = document.createElement('div');
+        attributePanel.className = 'attribute-analysis-panel';
+        attributePanel.innerHTML = `
+            <div class="panel-header">
+                <h4>🎯 Catalog Profile</h4>
+                <span class="panel-status">Computed from the loaded CSV</span>
+            </div>
+
+            <div class="capability-grid">
+                <div class="capability-card">
+                    <div class="capability-icon">🔗</div>
+                    <h5>Attribute Dimensions</h5>
+                    <p>Fabric, color, fit, style, and category columns detected in the loaded file</p>
+                    <div class="capability-metric">
+                        <span class="metric-label">Dimensions Tracked:</span>
+                        <span class="metric-value" id="attributesTracked">0 / 5</span>
+                    </div>
+                </div>
+
+                <div class="capability-card">
+                    <div class="capability-icon">👥</div>
+                    <h5>Funnel Interactions</h5>
+                    <p>Total views + cart adds + purchases summed from the real loaded data</p>
+                    <div class="capability-metric">
+                        <span class="metric-label">Interactions Counted:</span>
+                        <span class="metric-value" id="interactionsAnalyzed">0</span>
+                    </div>
+                </div>
+
+                <div class="capability-card">
+                    <div class="capability-icon">📋</div>
+                    <h5>Schema Detection</h5>
+                    <p>Header matching against the known v1/v2 catalog schemas</p>
+                    <div class="capability-metric">
+                        <span class="metric-label">Detected Schema:</span>
+                        <span class="metric-value" id="schemaDetected">—</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lifecycle-tracker">
+                <h5>Funnel Drop-off (computed after you run an analysis)</h5>
+                <div class="lifecycle-stages">
+                    <div class="lifecycle-stage" id="stage-intro">
+                        <div class="stage-icon">🆕</div>
+                        <span>Views</span>
+                        <div class="stage-progress"></div>
+                        <small id="stage-intro-value">—</small>
+                    </div>
+                    <div class="lifecycle-stage" id="stage-engage">
+                        <div class="stage-icon">👁️</div>
+                        <span>Cart Adds</span>
+                        <div class="stage-progress"></div>
+                        <small id="stage-engage-value">—</small>
+                    </div>
+                    <div class="lifecycle-stage" id="stage-purchase">
+                        <div class="stage-icon">🛒</div>
+                        <span>Purchases</span>
+                        <div class="stage-progress"></div>
+                        <small id="stage-purchase-value">—</small>
+                    </div>
+                    <div class="lifecycle-stage" id="stage-rebuy">
+                        <div class="stage-icon">🔄</div>
+                        <span>Repeat Purchase</span>
+                        <div class="stage-progress"></div>
+                        <small id="stage-rebuy-value">n/a in this schema</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="influential-attributes">
+                <h5>Top Attributes by Revenue</h5>
+                <div class="attributes-ranking" id="attributesRanking">
+                    <div class="attribute-rank">
+                        <span class="rank-number">1</span>
+                        <span class="rank-name">Run an analysis to populate this</span>
+                        <span class="rank-impact">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="integration-status">
+                <h5>Data Source</h5>
+                <div class="integration-items" id="dataSourceFacts">
+                    <div class="integration-item"><span class="integration-icon">—</span><span>No file loaded yet</span></div>
+                </div>
+            </div>
+        `;
+
+        const dashboard = document.querySelector('.agent-dashboard');
+        if (dashboard) {
+            dashboard.appendChild(attributePanel);
         }
     }
-    
-    // Activate all agents
-    function activateAgents() {
-        Object.keys(agents).forEach((key, index) => {
-            setTimeout(() => {
-                updateAgentStatus(key, 'active');
-                logCommunication(`${agents[key].name} activated and ready`, 'system');
-                
-                // Start agent-specific tasks
-                if (key === 'scout') startScoutAgent();
-                if (key === 'analyst') startAnalystAgent();
-                if (key === 'strategy') startStrategyAgent();
-                if (key === 'action') startActionAgent();
-                
-            }, index * 500);
-        });
-        
-        // Start attribute analysis monitoring
-        startAttributeAnalysisMonitoring();
-    }
-    
-    // Deactivate all agents
-    function deactivateAgents() {
-        Object.keys(agents).forEach(key => {
-            updateAgentStatus(key, 'idle');
-        });
-        
-        if (monitoringInterval) {
-            clearInterval(monitoringInterval);
+
+    // ---- Real event handlers, called from data-loader.js / analysis-engine.js --
+
+    // Scout Agent: fired once when a CSV finishes parsing. Pure data profiling.
+    function onDataLoaded(profile) {
+        setAgentStatus('scout', 'done', `${profile.rowCount} rows, schema: ${profile.schema}`);
+        logCommunication(
+            `Scout Agent: parsed "${profile.fileName || 'uploaded file'}" — ${profile.rowCount} rows, ${profile.columnCount} columns, schema detected as ${profile.schema}` +
+            (profile.missingColumns && profile.missingColumns.length ? `, missing: ${profile.missingColumns.join(', ')}` : ', no required columns missing') +
+            `. Data completeness: ${profile.completeness.toFixed(1)}%.`,
+            'scout'
+        );
+
+        const tracked = ATTRIBUTE_DIMENSIONS.filter(dim => (profile.columns || []).includes(dim));
+        setText('attributesTracked', `${tracked.length} / ${ATTRIBUTE_DIMENSIONS.length}`);
+        setText('schemaDetected', profile.schema);
+
+        const factsEl = document.getElementById('dataSourceFacts');
+        if (factsEl) {
+            factsEl.innerHTML = `
+                <div class="integration-item"><span class="integration-icon">📄</span><span>${escapeHtml(profile.fileName || 'uploaded file')}</span></div>
+                <div class="integration-item"><span class="integration-icon">${profile.schema === 'unknown' ? '⚠️' : '✅'}</span><span>Schema: ${escapeHtml(profile.schema)}</span></div>
+                <div class="integration-item"><span class="integration-icon">${profile.missingColumns.length ? '⚠️' : '✅'}</span><span>${profile.missingColumns.length ? profile.missingColumns.length + ' missing column(s)' : 'All core columns present'}</span></div>
+                <div class="integration-item"><span class="integration-icon">✅</span><span>${profile.rowCount} rows profiled</span></div>
+            `;
         }
-        
-        logCommunication('All agents deactivated', 'system');
+
+        // Reset the downstream agents for the new dataset.
+        setAgentStatus('analyst', 'idle', 'Waiting for you to run an analysis...');
+        setAgentStatus('strategy', 'idle', 'Waiting for you to run an analysis...');
+        setAgentStatus('action', 'idle', 'Waiting for you to run an analysis...');
     }
-    
-    // Update agent status
-    function updateAgentStatus(agentKey, status) {
+
+    // Analyst Agent: real aggregation results are already computed synchronously
+    // by analysisEngine.analyzeProductData() before the network call goes out.
+    function onAnalysisStart(analysisType, results) {
+        const anomalyCount = (results.anomalies || []).length;
+        const outlierCount = (results.anomalies || []).filter(a => a.flag === 'outlier').length;
+        const smallSampleCount = (results.anomalies || []).filter(a => a.flag === 'small_sample').length;
+
+        setAgentStatus('analyst', 'done', `${anomalyCount} flags (${outlierCount} outliers, ${smallSampleCount} small-sample)`);
+        logCommunication(
+            `Analyst Agent: aggregated ${results.catalogSummary.totalProducts} products across ${Object.keys(results.attributeAggregates).length} dimensions. ` +
+            `Top revenue attribute: ${results.topAttribute} (${results.topAttributeDimension}). Flagged ${anomalyCount} statistical/sample-size anomalies.`,
+            'analyst'
+        );
+
+        updateFunnelStages(results.funnelStats);
+        updateAttributeRanking(results.attributeAggregates);
+
+        const interactions = (results.funnelStats.totalViews || 0) + (results.funnelStats.totalCartAdds || 0) + (results.funnelStats.totalPurchases || 0);
+        setText('interactionsAnalyzed', Math.round(interactions).toLocaleString());
+
+        setAgentStatus('strategy', 'processing', `Sending ${analysisType} aggregates to Claude...`);
+        logCommunication(`Strategy Agent: requesting ${analysisType} analysis from Claude via /.netlify/functions/analyze (aggregates only, no raw CSV sent).`, 'strategy');
+
+        renderTopRecommendation(null, 'waiting');
+    }
+
+    // Strategy + Action Agents: fired once the Netlify Function returns.
+    function onAnalysisComplete(apiResponse, results) {
+        const narrative = (apiResponse && apiResponse.agentNarrative) || {};
+
+        setAgentStatus('strategy', 'done', 'Received reasoning from Claude');
+        if (narrative.strategy) {
+            logCommunication(`Strategy Agent: ${narrative.strategy}`, 'strategy');
+        }
+
+        const recs = (apiResponse && apiResponse.recommendations) || [];
+        setAgentStatus('action', 'done', `${recs.length} recommendation(s) ranked`);
+        if (narrative.action) {
+            logCommunication(`Action Agent: ${narrative.action}`, 'action');
+        }
+
+        renderTopRecommendation(recs[0] || null, 'done');
+    }
+
+    function onAnalysisError(message) {
+        setAgentStatus('strategy', 'error', 'Claude call failed');
+        setAgentStatus('action', 'error', 'No recommendations to rank');
+        logCommunication(`Strategy Agent: request failed — ${message}. Showing computed aggregates instead of AI narrative.`, 'system');
+        renderTopRecommendation(null, 'error');
+    }
+
+    function updateFunnelStages(funnelStats) {
+        const views = funnelStats.totalViews || 0;
+        const cartAdds = funnelStats.totalCartAdds || 0;
+        const purchases = funnelStats.totalPurchases || 0;
+
+        setStage('stage-intro', 100, `${Math.round(views).toLocaleString()} views`);
+        setStage('stage-engage', views > 0 ? (cartAdds / views) * 100 : 0, funnelStats.viewToCartRate !== null ? (funnelStats.viewToCartRate * 100).toFixed(1) + '% of views' : 'n/a');
+        setStage('stage-purchase', views > 0 ? (purchases / views) * 100 : 0, funnelStats.overallConversionRate !== null ? (funnelStats.overallConversionRate * 100).toFixed(1) + '% of views' : 'n/a');
+        // Repeat-purchase rate is not computed by this schema/pipeline — say so rather than invent it.
+        setStage('stage-rebuy', 0, 'n/a in this schema');
+    }
+
+    function setStage(stageId, widthPercent, label) {
+        const stage = document.getElementById(stageId);
+        if (!stage) return;
+        const progress = stage.querySelector('.stage-progress');
+        if (progress) {
+            progress.style.width = Math.max(0, Math.min(100, widthPercent)) + '%';
+            progress.style.background = '#146eb4';
+            progress.style.height = '3px';
+        }
+        const valueEl = document.getElementById(`${stageId}-value`);
+        if (valueEl) valueEl.textContent = label;
+    }
+
+    function updateAttributeRanking(attributeAggregates) {
+        const all = [];
+        Object.keys(attributeAggregates).forEach(dim => {
+            (attributeAggregates[dim] || []).slice(0, 3).forEach(row => {
+                all.push({ dim, value: row.value, revenue: row.revenue, count: row.count });
+            });
+        });
+        all.sort((a, b) => b.revenue - a.revenue);
+        const top3 = all.slice(0, 3);
+
+        const container = document.getElementById('attributesRanking');
+        if (container) {
+            container.innerHTML = top3.map((attr, index) => `
+                <div class="attribute-rank">
+                    <span class="rank-number">${index + 1}</span>
+                    <span class="rank-name">${escapeHtml(attr.dim)}: ${escapeHtml(attr.value)}</span>
+                    <span class="rank-impact">$${Math.round(attr.revenue).toLocaleString()} (n=${attr.count})</span>
+                </div>
+            `).join('');
+        }
+    }
+
+    function renderTopRecommendation(rec, state) {
+        const container = document.getElementById('decisionTreeContainer');
+        if (!container) return;
+
+        if (state === 'waiting') {
+            container.innerHTML = `<h4>Top Recommendation</h4><div class="decision-tree"><div class="tree-node root"><span>Waiting on Claude's response...</span></div></div>`;
+            return;
+        }
+        if (state === 'error' || !rec) {
+            container.innerHTML = `<h4>Top Recommendation</h4><div class="decision-tree"><div class="tree-node root"><span>${state === 'error' ? 'Unavailable — AI call failed.' : 'No recommendation returned.'}</span></div></div>`;
+            return;
+        }
+
+        container.innerHTML = `
+            <h4>Top Recommendation</h4>
+            <div class="decision-tree">
+                <div class="tree-node root">
+                    <span>${escapeHtml(rec.action || 'Recommendation')}</span>
+                </div>
+                <div class="tree-branches">
+                    <div class="tree-branch">
+                        <div class="tree-node option">
+                            <span>${escapeHtml(rec.rationale || '')}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="tree-outcome">
+                    <span>Evidence: ${escapeHtml(rec.evidence || 'n/a')}</span>
+                </div>
+            </div>
+        `;
+    }
+
+    function setAgentStatus(agentKey, status, detail) {
         agents[agentKey].status = status;
         const card = document.getElementById(`agent-${agentKey}`);
         if (card) {
             const statusIndicator = card.querySelector('.agent-status-indicator');
             const statusText = card.querySelector('.agent-status');
-            
-            statusIndicator.className = `agent-status-indicator ${status}`;
-            statusText.textContent = status;
-            
-            // Update confidence
-            agents[agentKey].confidence = status === 'active' ? 85 + Math.random() * 10 : 0;
-            document.getElementById(`${agentKey}-confidence`).textContent = 
-                agents[agentKey].confidence.toFixed(0) + '%';
+            if (statusIndicator) statusIndicator.className = `agent-status-indicator ${status}`;
+            if (statusText) statusText.textContent = status;
         }
+        setText(`${agentKey}-detail`, detail || '');
     }
-    
-    // Scout Agent - Continuous Monitoring
-    function startScoutAgent() {
-        const scoutInterval = setInterval(() => {
-            if (!isMonitoring) {
-                clearInterval(scoutInterval);
-                return;
-            }
-            
-            // Simulate anomaly detection
-            const anomalyChance = Math.random();
-            if (anomalyChance > 0.7) {
-                const anomalies = [
-                    'Unusual spike in "Nulu" fabric demand detected',
-                    'Inventory levels critical for "Align Pants"',
-                    'Customer return rate increasing for "Navy" color',
-                    'Pricing opportunity identified for "Athletic" category',
-                    'Competitor price change detected in "Yoga" segment'
-                ];
-                
-                const anomaly = anomalies[Math.floor(Math.random() * anomalies.length)];
-                logCommunication(`Scout Agent: ${anomaly}`, 'scout');
-                
-                // Trigger analyst agent
-                triggerAgentCollaboration('scout', 'analyst', anomaly);
-            }
-            
-            // Update progress
-            updateAgentProgress('scout', Math.random() * 100);
-            
-        }, 3000);
+
+    function setText(id, value) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value;
     }
-    
-    // Analyst Agent - Deep Analysis
-    function startAnalystAgent() {
-        const analystInterval = setInterval(() => {
-            if (!isMonitoring) {
-                clearInterval(analystInterval);
-                return;
-            }
-            
-            // Simulate analysis insights
-            if (Math.random() > 0.6) {
-                const insights = [
-                    'Pattern identified: High-rise fits show 34% better performance',
-                    'Correlation found: Sustainability score impacts purchase rate',
-                    'Trend analysis: Athletic wear demand increasing 23% QoQ',
-                    'Segment insight: Women 25-35 prefer earth tone colors'
-                ];
-                
-                const insight = insights[Math.floor(Math.random() * insights.length)];
-                logCommunication(`Analyst Agent: ${insight}`, 'analyst');
-                
-                // Trigger strategy agent
-                triggerAgentCollaboration('analyst', 'strategy', insight);
-            }
-            
-            updateAgentProgress('analyst', Math.random() * 100);
-            
-        }, 4000);
-    }
-    
-    // Strategy Agent - Strategic Planning
-    function startStrategyAgent() {
-        const strategyInterval = setInterval(() => {
-            if (!isMonitoring) {
-                clearInterval(strategyInterval);
-                return;
-            }
-            
-            // Generate strategic recommendations
-            if (Math.random() > 0.5) {
-                const strategies = [
-                    'Recommend: Increase "Nulu" inventory by 40% for Q2',
-                    'Strategy: Launch targeted campaign for sustainable products',
-                    'Optimize: Adjust pricing algorithm for competitive advantage',
-                    'Plan: Introduce new color variants based on trend analysis'
-                ];
-                
-                const strategy = strategies[Math.floor(Math.random() * strategies.length)];
-                logCommunication(`Strategy Agent: ${strategy}`, 'strategy');
-                
-                // Create decision tree
-                createDecisionTree(strategy);
-                
-                // Trigger action agent for high-confidence decisions
-                if (agents.strategy.confidence > 90) {
-                    triggerAgentCollaboration('strategy', 'action', strategy);
-                }
-            }
-            
-            updateAgentProgress('strategy', Math.random() * 100);
-            
-        }, 5000);
-    }
-    
-    // Action Agent - Autonomous Execution
-    function startActionAgent() {
-        const actionInterval = setInterval(() => {
-            if (!isMonitoring) {
-                clearInterval(actionInterval);
-                return;
-            }
-            
-            // Simulate autonomous actions
-            if (Math.random() > 0.4 && agents.action.confidence > 85) {
-                const actions = [
-                    'Executed: Price adjustment for 15 SKUs',
-                    'Implemented: Inventory rebalancing across 3 warehouses',
-                    'Activated: Personalized email campaign for 10K customers',
-                    'Updated: Product recommendations on homepage'
-                ];
-                
-                const action = actions[Math.floor(Math.random() * actions.length)];
-                logCommunication(`Action Agent: ${action}`, 'action');
-                
-                // Record decision
-                recordDecision(action);
-                
-                // Show notification
-                uiController.showNotification(`Autonomous Action: ${action}`);
-            }
-            
-            updateAgentProgress('action', Math.random() * 100);
-            
-        }, 6000);
-    }
-    
-    // Update agent progress bar
-    function updateAgentProgress(agentKey, progress) {
-        const progressBar = document.getElementById(`${agentKey}-progress`);
-        if (progressBar) {
-            progressBar.style.width = progress + '%';
-            progressBar.style.background = `linear-gradient(90deg, #146eb4, #4daae8)`;
-            progressBar.style.height = '3px';
-            progressBar.style.transition = 'width 0.3s ease';
-        }
-    }
-    
-    // Agent collaboration
-    function triggerAgentCollaboration(fromAgent, toAgent, message) {
-        setTimeout(() => {
-            logCommunication(
-                `${agents[fromAgent].name} → ${agents[toAgent].name}: ${message}`,
-                'collaboration'
-            );
-            
-            // Update target agent status
-            updateAgentStatus(toAgent, 'processing');
-            setTimeout(() => {
-                updateAgentStatus(toAgent, 'active');
-            }, 1500);
-        }, 500);
-    }
-    
-    // Log agent communication
+
     function logCommunication(message, type) {
         const commLog = document.getElementById('agentCommLog');
         if (commLog) {
@@ -430,200 +353,38 @@ const agenticAI = (function() {
             entry.className = `comm-entry ${type}`;
             entry.innerHTML = `
                 <span class="comm-time">${new Date().toLocaleTimeString()}</span>
-                <span class="comm-message">${message}</span>
+                <span class="comm-message">${escapeHtml(message)}</span>
             `;
-            
             commLog.insertBefore(entry, commLog.firstChild);
-            
-            // Keep only last 10 messages
-            while (commLog.children.length > 10) {
+            while (commLog.children.length > 15) {
                 commLog.removeChild(commLog.lastChild);
             }
         }
     }
-    
-    // Create decision tree visualization
-    function createDecisionTree(decision) {
-        const container = document.getElementById('decisionTreeContainer');
-        if (container) {
-            container.innerHTML = `
-                <h4>Decision Tree Analysis</h4>
-                <div class="decision-tree">
-                    <div class="tree-node root">
-                        <span>Decision Point</span>
-                    </div>
-                    <div class="tree-branches">
-                        <div class="tree-branch">
-                            <div class="tree-node option">
-                                <span>Option A: ${decision}</span>
-                                <span class="confidence">Confidence: 92%</span>
-                            </div>
-                        </div>
-                        <div class="tree-branch">
-                            <div class="tree-node option alternative">
-                                <span>Option B: Maintain current strategy</span>
-                                <span class="confidence">Confidence: 65%</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="tree-outcome">
-                        <span>Predicted Impact: +$1.2M revenue</span>
-                    </div>
-                </div>
-            `;
-        }
+
+    function clearLog() {
+        const commLog = document.getElementById('agentCommLog');
+        if (commLog) commLog.innerHTML = '';
+        logCommunication('Log cleared.', 'system');
     }
-    
-    // Start attribute analysis monitoring
-    function startAttributeAnalysisMonitoring() {
-        let totalAttributes = 0;
-        let totalInteractions = 0;
-        let modelAccuracy = 85;
-        
-        monitoringInterval = setInterval(() => {
-            // Simulate attribute tracking
-            totalAttributes += Math.floor(Math.random() * 5) + 1;
-            totalInteractions += Math.floor(Math.random() * 50) + 10;
-            modelAccuracy = Math.min(99, modelAccuracy + (Math.random() * 0.5));
-            
-            // Update display
-            const attrTracked = document.getElementById('attributesTracked');
-            const interAnalyzed = document.getElementById('interactionsAnalyzed');
-            const accuracy = document.getElementById('modelAccuracy');
-            
-            if (attrTracked) attrTracked.textContent = totalAttributes;
-            if (interAnalyzed) interAnalyzed.textContent = totalInteractions.toLocaleString();
-            if (accuracy) accuracy.textContent = modelAccuracy.toFixed(1) + '%';
-            
-            // Update lifecycle stages
-            updateLifecycleStages();
-            
-            // Update attribute rankings
-            updateAttributeRankings();
-            
-            // Trigger alerts for important findings
-            if (totalInteractions % 200 === 0) {
-                logCommunication('Milestone: ' + totalInteractions + ' customer interactions analyzed', 'system');
-            }
-            
-        }, 2000);
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = String(str == null ? '' : str);
+        return div.innerHTML;
     }
-    
-    // Update lifecycle stages
-    function updateLifecycleStages() {
-        const stages = ['stage-intro', 'stage-engage', 'stage-purchase', 'stage-rebuy'];
-        stages.forEach(stageId => {
-            const stage = document.getElementById(stageId);
-            if (stage) {
-                const progress = stage.querySelector('.stage-progress');
-                if (progress) {
-                    const width = Math.random() * 100;
-                    progress.style.width = width + '%';
-                    progress.style.background = width > 70 ? '#00d4aa' : width > 40 ? '#ffb800' : '#146eb4';
-                    progress.style.height = '3px';
-                    progress.style.transition = 'width 0.5s ease';
-                }
-            }
-        });
-    }
-    
-    // Update attribute rankings
-    function updateAttributeRankings() {
-        const rankings = [
-            { name: 'Nulu Fabric', impact: '+34% conversion' },
-            { name: 'High-Rise Fit', impact: '+28% loyalty' },
-            { name: 'Sustainable Materials', impact: '+22% premium' },
-            { name: 'Athletic Style', impact: '+19% repeat' },
-            { name: 'Black Color', impact: '+15% velocity' }
-        ];
-        
-        const rankingContainer = document.getElementById('attributesRanking');
-        if (rankingContainer && Math.random() > 0.7) {
-            rankingContainer.innerHTML = rankings.slice(0, 3).map((attr, index) => `
-                <div class="attribute-rank">
-                    <span class="rank-number">${index + 1}</span>
-                    <span class="rank-name">${attr.name}</span>
-                    <span class="rank-impact">${attr.impact}</span>
-                </div>
-            `).join('');
-        }
-    }
-    
-    // Initialize decision engine
-    function initializeDecisionEngine() {
-        // Create decision engine with rules
-        const decisionRules = [
-            {
-                condition: (data) => data.conversionRate > 15,
-                action: 'Increase inventory for high-converting products',
-                confidence: 0.9
-            },
-            {
-                condition: (data) => data.returnRate > 0.2,
-                action: 'Review product quality and descriptions',
-                confidence: 0.85
-            },
-            {
-                condition: (data) => data.sustainabilityScore > 80,
-                action: 'Promote eco-friendly attributes in marketing',
-                confidence: 0.95
-            }
-        ];
-        
-        // Store rules for processing
-        window.agenticDecisionRules = decisionRules;
-    }
-    
-    // Record decision for learning
-    function recordDecision(decision) {
-        decisionHistory.push({
-            timestamp: new Date(),
-            decision: decision,
-            agents: Object.keys(agents).map(key => ({
-                name: agents[key].name,
-                confidence: agents[key].confidence
-            })),
-            outcome: null // Will be updated with actual outcome
-        });
-        
-        // Simulate learning
-        updateLearningModel();
-    }
-    
-    // Update learning model
-    function updateLearningModel() {
-        // Simulate model improvement
-        Object.keys(agents).forEach(key => {
-            if (agents[key].confidence > 0) {
-                agents[key].confidence = Math.min(99, agents[key].confidence + 0.1);
-                document.getElementById(`${key}-confidence`).textContent = 
-                    agents[key].confidence.toFixed(0) + '%';
-            }
-        });
-        
-        // Log learning progress
-        if (decisionHistory.length % 10 === 0) {
-            logCommunication(
-                `Learning Update: Model accuracy improved to ${(85 + decisionHistory.length * 0.1).toFixed(1)}%`,
-                'system'
-            );
-        }
-    }
-    
-    // Get agent status
+
     function getAgentStatus() {
         return agents;
     }
-    
-    // Get decision history
-    function getDecisionHistory() {
-        return decisionHistory;
-    }
-    
+
     return {
         initialize,
-        toggleAgents,
-        getAgentStatus,
-        getDecisionHistory
+        onDataLoaded,
+        onAnalysisStart,
+        onAnalysisComplete,
+        onAnalysisError,
+        clearLog,
+        getAgentStatus
     };
 })();

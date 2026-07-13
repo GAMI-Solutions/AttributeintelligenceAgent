@@ -950,6 +950,17 @@ body {
     color: var(--danger);
 }
 
+.ai-status-banner {
+    background: #fff4e5;
+    border: 1px solid #f0a94a;
+    color: #8a5a00;
+    border-radius: 10px;
+    padding: 12px 18px;
+    margin-bottom: 15px;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
 /* Results */
 .analysis-results {
     display: grid;
